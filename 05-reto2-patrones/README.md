@@ -29,7 +29,9 @@ El codigo proviene de `p_mvcHacienda.zip` (SHA-256 `e3c45306a94f5473b4bab353265e
 - [A1 — Puntos de dolor](01-analisis/A1_Puntos_de_Dolor.md)
 - [A2 — Decision de patrones](02-decision-patrones/A2_Decision_de_Patrones.md)
 - [Baseline de codigo](04-src/baseline-input-2026-08-31/)
-- [Diagramas existentes](03-diseno/diagramas/): material historico preservado. El Draw.io y sus PNG representan Strategy, Chain of Responsibility y SC-3, decisiones que no son las de A2; no son el TO-BE canónico.
+- [Diseno AS-IS / TO-BE](03-diseno/A3_DISENO_ASIS_TOBE.md): artefacto canónico de la Actividad 3, con un Draw.io de una página y layers `AS-IS` / `TO-BE`.
+- [Diagramas canónicos](03-diseno/diagramas/): `A3-ASIS-TOBE-LAYERED.drawio` y sus exportaciones AS-IS / TO-BE.
+- [Diagramas históricos](99-insumos/borrador-previo/diagramas-no-canonicos/): Strategy, Chain of Responsibility y SC-3 preservados como evidencia no canónica.
 - [Borrador previo](99-insumos/borrador-previo/): insumo historico conservado, no fuente de decisiones vigentes.
 
 ## Patrones candidatos adoptados actualmente
