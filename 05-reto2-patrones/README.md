@@ -8,9 +8,19 @@ Baseline integrado; trabajo en progreso. Este commit establece el punto de parti
 
 Analizar rigideces del dominio Hacienda y decidir patrones de diseño arquitectónico sin modificar comportamiento observable sin autorizacion explicita.
 
-## Fuente actual
+## Fuente de verdad
 
-Esta carpeta consolida el material que estaba disperso. Las versiones canónicas actuales de analisis y decision son las recibidas en el input autoritativo de esta integracion.
+```text
+Codigo baseline
+      ↓
+A1 - diagnostico
+      ↓
+A2 - decision arquitectonica
+      ↓
+Diseno AS-IS / TO-BE
+```
+
+Las versiones canónicas actuales de analisis y decision son A1 y A2. El diseño solo puede considerarse vigente cuando materialice esas decisiones.
 
 El codigo proviene de `p_mvcHacienda.zip` (SHA-256 `e3c45306a94f5473b4bab353265ee866d85b47b46f221b133599ca1c59e09629`) en el input autoritativo. Se importo su contenido fuente, excluyendo exclusivamente `bin/`, `obj/` y `.vs/` generados.
 
@@ -19,7 +29,7 @@ El codigo proviene de `p_mvcHacienda.zip` (SHA-256 `e3c45306a94f5473b4bab353265e
 - [A1 — Puntos de dolor](01-analisis/A1_Puntos_de_Dolor.md)
 - [A2 — Decision de patrones](02-decision-patrones/A2_Decision_de_Patrones.md)
 - [Baseline de codigo](04-src/baseline-input-2026-08-31/)
-- [Diagramas existentes](03-diseno/diagramas/): baseline historico de trabajo; se preservan sin rediseño y se auditaran despues de este baseline.
+- [Diagramas existentes](03-diseno/diagramas/): material historico preservado. El Draw.io y sus PNG representan Strategy, Chain of Responsibility y SC-3, decisiones que no son las de A2; no son el TO-BE canónico.
 - [Borrador previo](99-insumos/borrador-previo/): insumo historico conservado, no fuente de decisiones vigentes.
 
 ## Patrones candidatos adoptados actualmente
@@ -43,6 +53,14 @@ Facade sigue como decision abierta del equipo, segun A2.
 ## Build del baseline
 
 El snapshot importado es .NET 8 y actualmente falla con seis errores de compilacion preexistentes sobre `Viva.enum_l_atenuaciones`; no se corrigieron en esta integracion.
+
+## Regla del baseline
+
+`04-src/baseline-input-2026-08-31/` es un snapshot inmutable del estado observado. Sus defectos forman parte de la evidencia. Las correcciones o implementaciones deben realizarse fuera de ese directorio.
+
+## CI
+
+No requerida por ahora: una compilacion automatica del baseline produciria un fallo conocido y no aportaria una señal util.
 
 ## Proximo paso
 

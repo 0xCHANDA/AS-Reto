@@ -100,4 +100,4 @@ grep -rc "Error inesperado en" --include="*.cs" .
 ---
 
 > ⚠️ **Aviso fuera del alcance de esta actividad, pero con impacto en la nota**
-> El proyecto **no compila** en su estado actual: `dotnet build` devuelve 6 errores, todos en `Bib_Hacienda` (`Viva.enum_l_atenuaciones` no existe, `Venta` no tiene constructor de 4 argumentos, `RegistroVenta.VentasMutables` no existe). Regla 1 del enunciado: *"Código que no compila o no ejecuta: el criterio 4 se califica en 0.0"* — son 15 % de la nota, y arrastra al criterio 3 porque los diagramas no corresponderían a nada ejecutable. No es un punto de dolor arquitectónico, es un bloqueante de entrega.
+> El proyecto **no compila** en su estado actual: `dotnet build` devuelve 6 errores, todos en `Bib_Hacienda`, porque `Viva.enum_l_atenuaciones` no existe. Regla 1 del enunciado: *"Código que no compila o no ejecuta: el criterio 4 se califica en 0.0"* — son 15 % de la nota, y arrastra al criterio 3 porque los diagramas no corresponderían a nada ejecutable. No es un punto de dolor arquitectónico, es un bloqueante de entrega.

@@ -6,6 +6,12 @@ Este repositorio contiene la entrega del reto de Arquitectura de Software. Está
 
 La solicitud implementada es **SC-1: venta de productos derivados del ganado —lácteos, carne y piel—**.
 
+## Reto 2 — Patrones de Diseño Arquitectónico
+
+Carpeta: [`05-reto2-patrones/`](05-reto2-patrones/)
+
+Contiene el baseline observado, el [A1 de puntos de dolor](05-reto2-patrones/01-analisis/A1_Puntos_de_Dolor.md), el [A2 de decisión de patrones](05-reto2-patrones/02-decision-patrones/A2_Decision_de_Patrones.md), y los diagramas e insumos preservados. El Reto 2 está en progreso: consulte su README para distinguir el material canónico del histórico y conocer el estado del baseline.
+
 ## Equipo y roles
 
 | Integrante | Responsabilidad principal |
