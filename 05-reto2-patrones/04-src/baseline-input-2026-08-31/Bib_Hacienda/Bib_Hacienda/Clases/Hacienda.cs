@@ -169,8 +169,9 @@ namespace Bib_Hacienda.Clases
                     res = new Novillo(nombre, peso, edad);
                 }
                 
-                string resultado = potrero.agregar(res);
-                return resultado;
+                potrero.agregar(res);
+
+                return $"La res {nombre} ha sido añadida al potrero {potrero.Identificacion} con exito.";
             }
             catch (Exception er)
             {

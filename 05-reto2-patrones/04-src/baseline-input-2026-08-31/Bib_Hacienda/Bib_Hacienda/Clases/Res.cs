@@ -30,6 +30,14 @@ namespace Bib_Hacienda.Clases
             this.historiaClinica = historiaClinica;
         }
 
+        // Compatibilidad con las subclases existentes, que se construyen sin
+        // historia clinica. Delega en el constructor actual con una historia
+        // vacia: SC-3 no forma parte de este trabajo.
+        protected Res(string nombre, uint peso, ushort edad)
+            : this(nombre, peso, edad, new HistoriaClinica())
+        {
+        }
+
         // Accesores legacy conservados. El contrato de Res establece que la edad
         // debe pertenecer al rango de la categoría concreta; cada subtipo aplica
         // esa misma regla tanto en construcción como en cambios posteriores.
