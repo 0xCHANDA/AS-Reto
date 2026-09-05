@@ -2,7 +2,7 @@
 
 ## Estado
 
-Baseline integrado; trabajo en progreso. Este commit establece el punto de partida oficial para continuar el Reto 2.
+`04-src/baseline-input-2026-08-31/` es el snapshot inmutable de entrada. La implementacion evolutiva de Reto 2 vive en `04-src/active/`; el proyecto de verificacion referencia esta ultima fuente.
 
 ## Proposito
 
@@ -28,7 +28,8 @@ El codigo proviene de `p_mvcHacienda.zip` (SHA-256 `e3c45306a94f5473b4bab353265e
 
 - [A1 — Puntos de dolor](01-analisis/A1_Puntos_de_Dolor.md)
 - [A2 — Decision de patrones](02-decision-patrones/A2_Decision_de_Patrones.md)
-- [Baseline de codigo](04-src/baseline-input-2026-08-31/)
+- [Baseline de codigo inmutable](04-src/baseline-input-2026-08-31/)
+- [Fuente activa](04-src/active/)
 - [Diseno AS-IS / TO-BE](03-diseno/A3_DISENO_ASIS_TOBE.md): artefacto canónico de la Actividad 3, con un Draw.io de una página y layers `AS-IS` / `TO-BE`.
 - [Diagramas canónicos](03-diseno/diagramas/): `A3-ASIS-TOBE-LAYERED.drawio` y sus exportaciones AS-IS / TO-BE.
 - [Diagramas históricos](99-insumos/borrador-previo/diagramas-no-canonicos/): Strategy, Chain of Responsibility y SC-3 preservados como evidencia no canónica.

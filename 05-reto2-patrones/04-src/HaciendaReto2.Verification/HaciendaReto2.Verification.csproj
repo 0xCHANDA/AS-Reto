@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\baseline-input-2026-08-31\Bib_Hacienda\Bib_Hacienda\Bib_Hacienda.csproj" />
+    <ProjectReference Include="..\active\Bib_Hacienda\Bib_Hacienda\Bib_Hacienda.csproj" />
   </ItemGroup>
 
 </Project>

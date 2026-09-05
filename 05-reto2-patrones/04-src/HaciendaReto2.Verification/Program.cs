@@ -64,6 +64,16 @@ namespace HaciendaReto2.Verification
             CapturaConservaElOrdenDeEmision();
             CapturaAislaOperacionesEntreSi();
 
+            // --- SC-3: historia clinica ---
+            ResTieneHistoriaClinicaInicializada();
+            HistoriaClinicaIniciaSinRegistros();
+            VacunaAplicadaSeRegistraUnaVezEnHistoria();
+            VacunaDuplicadaNoAlteraHistoria();
+            VacunaVencidaNoAlteraHistoria();
+            ResesTienenHistoriasIndependientes();
+            FachadaLegacyDeVacunasComparteLaHistoria();
+            HistoriaClinicaNoPuedeCompartirseEntreReses();
+
             Console.WriteLine($"Verificaciones ejecutadas: {_checks}");
             if (_fallos == 0)
             {
@@ -619,6 +629,103 @@ namespace HaciendaReto2.Verification
             }
         }
 
+        // ------------------------------------------------------------------
+        // SC-3: historia clinica
+        // ------------------------------------------------------------------
+
+        private static void ResTieneHistoriaClinicaInicializada()
+        {
+            var res = new Ternero("Clinica", 200, 6);
+
+            Assert(res.HistoriaClinica != null,
+                "una res nueva siempre posee una historia clinica");
+        }
+
+        private static void HistoriaClinicaIniciaSinRegistros()
+        {
+            var historia = new HistoriaClinica();
+
+            AssertEqual(0, historia.VacunasAplicadas.Count,
+                "la historia clinica inicia sin vacunas");
+            AssertEqual(0, historia.EventosClinicos.Count,
+                "la historia clinica inicia sin eventos");
+        }
+
+        private static void VacunaAplicadaSeRegistraUnaVezEnHistoria()
+        {
+            var res = new Ternero("VacunacionValida", 200, 6);
+            var vacuna = new Bacteriana("Aftosa", "HC-1", Vencimiento, Aplicacion, 2u);
+
+            res.aplicar_vacuna(vacuna);
+
+            AssertEqual(1, res.HistoriaClinica.VacunasAplicadas.Count,
+                "una vacuna valida queda registrada una sola vez en la historia clinica");
+            Assert(ReferenceEquals(vacuna, res.HistoriaClinica.VacunasAplicadas.Single()),
+                "la historia clinica conserva la vacuna aplicada");
+        }
+
+        private static void VacunaDuplicadaNoAlteraHistoria()
+        {
+            var res = new Ternero("VacunacionDuplicada", 200, 6);
+            var vacuna = new Bacteriana("Aftosa", "HC-2", Vencimiento, Aplicacion, 2u);
+            res.aplicar_vacuna(vacuna);
+
+            AssertThrows(
+                "Error inesperado en el metodo aplicar_vacuna: La vacuna 'Aftosa' ya fue aplicada a la res 'VacunacionDuplicada'.",
+                () => res.aplicar_vacuna(vacuna),
+                "una vacuna duplicada conserva la regla existente");
+            AssertEqual(1, res.HistoriaClinica.VacunasAplicadas.Count,
+                "una vacuna duplicada no altera el historial");
+        }
+
+        private static void VacunaVencidaNoAlteraHistoria()
+        {
+            var res = new Ternero("VacunacionVencida", 200, 6);
+            var vencida = new Bacteriana("Brucelosis", "HC-3", DateTime.Now.AddDays(-1), Aplicacion, 2u);
+
+            AssertThrows(
+                "Error inesperado en el metodo aplicar_vacuna: " +
+                $"[Evento] La vacuna 'Brucelosis' del lote 'HC-3' está vencida desde {vencida.Fecha_vencimiento.ToShortDateString()}",
+                () => res.aplicar_vacuna(vencida),
+                "una vacuna vencida conserva la regla existente");
+            AssertEqual(0, res.HistoriaClinica.VacunasAplicadas.Count,
+                "una vacuna vencida no altera el historial");
+        }
+
+        private static void ResesTienenHistoriasIndependientes()
+        {
+            var primera = new Ternero("Primera", 200, 6);
+            var segunda = new Ternero("Segunda", 200, 6);
+
+            primera.HistoriaClinica.RegistrarEvento(
+                new EventoClinico(Aplicacion, "Revision", "Sin hallazgos"));
+
+            Assert(!ReferenceEquals(primera.HistoriaClinica, segunda.HistoriaClinica),
+                "dos reses no comparten la misma historia clinica");
+            AssertEqual(0, segunda.HistoriaClinica.EventosClinicos.Count,
+                "los eventos de una res no aparecen en otra");
+        }
+
+        private static void FachadaLegacyDeVacunasComparteLaHistoria()
+        {
+            var res = new Ternero("Compatibilidad", 200, 6);
+
+            Assert(ReferenceEquals(res.L_vacunas_aplicadas, res.HistoriaClinica.L_vacunas_aplicadas),
+                "L_vacunas_aplicadas es la misma coleccion de la historia clinica");
+        }
+
+        private static void HistoriaClinicaNoPuedeCompartirseEntreReses()
+        {
+            var historia = new HistoriaClinica();
+            var primera = new ResConHistoria("PrimeraConHistoria", 200, 6, historia);
+
+            AssertThrows("La historia clinica ya pertenece a otra res.",
+                () => new ResConHistoria("SegundaConHistoria", 200, 6, historia),
+                "una historia clinica no puede asignarse a dos reses");
+            Assert(ReferenceEquals(historia, primera.HistoriaClinica),
+                "la res conserva su historia clinica propia");
+        }
+
         internal static int ContarSuscriptores(object propietario, string campoPublisher, string campoEvento)
         {
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
@@ -717,6 +824,18 @@ namespace HaciendaReto2.Verification
     internal class ResVerificador : Res
     {
         public ResVerificador(string nombre, uint peso, ushort edad) : base(nombre, peso, edad)
+        {
+        }
+
+        public override byte MaxVacunasBacterianas => 1;
+
+        public override byte MaxVacunasVivas => 1;
+    }
+
+    internal class ResConHistoria : Res
+    {
+        public ResConHistoria(string nombre, uint peso, ushort edad, HistoriaClinica historiaClinica)
+            : base(nombre, peso, edad, historiaClinica)
         {
         }
 
