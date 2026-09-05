@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Bib_Hacienda.enums;
 
 namespace Bib_Hacienda.Clases
 {
@@ -39,7 +40,7 @@ namespace Bib_Hacienda.Clases
         }
 
         // Vacuna viva individual
-        public string Crear(string nombre, string lote, DateTime fecha_vencimiento, DateTime fecha_aplicacion, Viva.enum_l_atenuaciones grado_atenuacion)
+        public string Crear(string nombre, string lote, DateTime fecha_vencimiento, DateTime fecha_aplicacion, Atenuaciones grado_atenuacion)
         {
             try
             {
@@ -95,7 +96,7 @@ namespace Bib_Hacienda.Clases
         }
 
         // Lote de vacunas vivas
-        public string CrearLote(string nombre, string lote_base, DateTime fecha_vencimiento, DateTime fecha_aplicacion, Viva.enum_l_atenuaciones grado_atenuacion, uint cantidad)
+        public string CrearLote(string nombre, string lote_base, DateTime fecha_vencimiento, DateTime fecha_aplicacion, Atenuaciones grado_atenuacion, uint cantidad)
         {
             try
             {

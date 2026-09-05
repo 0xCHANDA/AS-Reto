@@ -17,14 +17,17 @@ namespace Bib_Hacienda.Clases
         private ushort edad;
         private List<Vacuna> l_vacunas_aplicadas;
 
+        private HistoriaClinica historiaClinica; 
+
         internal void EventHandler() { }
 
         //Constructor
-        public Res(string nombre, uint peso, ushort edad) : base(nombre)
+        public Res(string nombre, uint peso, ushort edad, HistoriaClinica historiaClinica) : base(nombre)
         {
             this.Peso = peso;
             this.edad = edad;
             this.l_vacunas_aplicadas = new List<Vacuna>();
+            this.historiaClinica = historiaClinica;
         }
 
         // Accesores legacy conservados. El contrato de Res establece que la edad

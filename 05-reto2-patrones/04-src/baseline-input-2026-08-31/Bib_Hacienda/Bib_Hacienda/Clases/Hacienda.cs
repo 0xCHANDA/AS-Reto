@@ -1,11 +1,12 @@
-﻿using Bib_Hacienda.Eventos;
+﻿using Bib_Hacienda.enums;
+using Bib_Hacienda.Eventos;
 using Bib_Hacienda.Interfaces;
 using Bib_Hacienda.Reglas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Bib_Hacienda.Clases.Potrero;
-
+ 
 namespace Bib_Hacienda.Clases
 {
     // Fachada principal de coordinación. SRP: delega, no implementa.
@@ -13,10 +14,12 @@ namespace Bib_Hacienda.Clases
     // - Vender -> se hace via RegistroVenta
     // - Crear vacunas -> se hace via FabricadorVacunas
     // - Aplicar vacunas -> sigue aquí (orquesta Potrero + Res + eventos)
-    public class Hacienda : IVacunacion, IVentaRes, ICreacionVacuna
+    public class Hacienda : IVacunacion, IVenta<Producto>, ICreacionVacuna
     {
         //Atributos
         private List<Potrero> l_potreros;
+
+        private List<IInventario<Producto>> l_inventarios;
         private readonly RegistroVenta registroVentas;
         private List<Vacuna> l_vacunas;
         private readonly FabricadorVacunas fabricadorVacunas;
@@ -28,7 +31,7 @@ namespace Bib_Hacienda.Clases
             private set => l_potreros = value;
         }
 
-        public List<Venta> L_ventas => registroVentas.VentasMutables;
+        public IReadOnlyList<Venta> L_ventas => registroVentas.Ventas;
 
         public List<Vacuna> L_vacunas
         {
@@ -121,13 +124,52 @@ namespace Bib_Hacienda.Clases
             }
         }
 
+       public IInventario<Producto> buscar_inventario(string nombre)
+        {
+            try
+            {
+              if(nombre == null || string.IsNullOrWhiteSpace(nombre) )
+                {
+                    throw new ArgumentException("El nombre de búsqueda no puede estar vacío.");
+                }
+
+                IInventario<Producto> inventario = l_inventarios.Find(inv => inv.ToString().IndexOf(nombre, StringComparison.OrdinalIgnoreCase) >= 0);
+
+                if (inventario == null)
+                {
+                    throw new Exception($"No se encontró ningún inventario con el nombre o coincidencia '{nombre}'.");
+                }
+                return inventario;
+            }
+            catch (System.Exception)
+            {
+                
+                throw;
+            }
+        }  
+
         //Metodo para  anadir res a un potrero
         public string anadir_res_potrero (string id_potrero, string nombre, ushort edad, uint peso)
         {
             try
             {
                 Potrero potrero = buscar_potrero(id_potrero);
-                string resultado = potrero.anadir_res(nombre, edad, peso);
+                Res res;
+
+                if (edad <= ReglaRes.edad_max_ternero)
+                {
+                    res = new Ternero(nombre, peso, edad);
+                }
+                else if (edad <= ReglaRes.edad_max_cebon)
+                {
+                    res = new Cebon(nombre, peso, edad);
+                }
+                else
+                {
+                    res = new Novillo(nombre, peso, edad);
+                }
+                
+                string resultado = potrero.agregar(res);
                 return resultado;
             }
             catch (Exception er)
@@ -136,15 +178,9 @@ namespace Bib_Hacienda.Clases
             }
         }
 
-        //Sobrecarga conservada para compatibilidad con consumidores existentes.
-        public string vender<T>(IInventario<T> inventario, T producto, uint monto) where T : Producto
-        {
-            return vender((IInventarioVendible<T>)inventario, producto, monto);
-        }
-
         //metodo para vender
-        public string vender<T>(IInventarioVendible<T> inventario, T producto, uint monto) where T : Producto
-        {
+        public string vender(IInventario<Producto> inventario, Producto producto, uint monto)
+        { 
             if (inventario == null)
                 throw new ArgumentNullException(nameof(inventario));
 
@@ -167,46 +203,7 @@ namespace Bib_Hacienda.Clases
 
             return $"Venta de '{productoRetirado.Nombre}' realizada con éxito.";
         }
-
-        //Metodo para registrar una venta ya creada (por ejemplo, restaurada desde persistencia)
-        //sin exponer la coleccion interna de registroVentas.
-        public void registrar_venta_cargada(Venta venta)
-        {
-            if (venta == null)
-                throw new ArgumentNullException(nameof(venta));
-
-            registroVentas.registrar(venta);
-        }
-
-        //Metodo para vender res (legacy)
-        public string vender_res(string id_potrero, string nombre, uint monto)
-        {
-            try
-            {
-                Potrero potrero = buscar_potrero(id_potrero);
-                Res res = potrero.buscar_res(nombre);
-
-                if (potrero == null) throw new ArgumentNullException(nameof(potrero));
-                if (res == null) throw new ArgumentNullException(nameof(res));
-
-                Venta venta = new Venta(potrero, DateTime.Now, res, monto);
-                registroVentas.registrar(venta);
-                potrero.L_reses.Remove(res);
-
-                return $"Venta de la res {res.Nombre} realizada con exito";
-            }
-            catch (Exception er)
-            {
-                throw new Exception("Error inesperado en el metodo vender_res: " + er.Message);
-            }
-        }
-
-        // Sobrecarga conservada para preservar la superficie pública de OLD.
-        public string alimentar_res(string id_potrero, string nombre)
-        {
-            return alimentar_res(id_potrero, nombre, 1);
-        }
-
+                  
         //Metodo para alimentar una res
         public string alimentar_res(string id_potrero, string nombre, uint cantidad)
         {
@@ -260,7 +257,7 @@ namespace Bib_Hacienda.Clases
         }
 
         //Metodo para crear vacuna viva individual
-        public string crear_vacuna(string nombre, string lote, DateTime fecha_vencimiento, DateTime fecha_aplicacion, Viva.enum_l_atenuaciones grado_atenuacion)
+        public string crear_vacuna(string nombre, string lote, DateTime fecha_vencimiento, DateTime fecha_aplicacion, Atenuaciones grado_atenuacion)
         {
             return fabricadorVacunas.Crear(nombre, lote, fecha_vencimiento, fecha_aplicacion, grado_atenuacion);
         }
@@ -272,7 +269,7 @@ namespace Bib_Hacienda.Clases
         }
 
         //Metodo para crear lote de vacunas vivas
-        public string crear_vacuna(string nombre, string lote_base, DateTime fecha_vencimiento, DateTime fecha_aplicacion, Viva.enum_l_atenuaciones grado_atenuacion, uint cantidad)
+        public string crear_vacuna(string nombre, string lote_base, DateTime fecha_vencimiento, DateTime fecha_aplicacion, Atenuaciones grado_atenuacion, uint cantidad)
         {
             return fabricadorVacunas.CrearLote(nombre, lote_base, fecha_vencimiento, fecha_aplicacion, grado_atenuacion, cantidad);
         }
