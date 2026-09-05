@@ -22,10 +22,6 @@ namespace Bib_Hacienda.Clases
         internal void EventHandler() { }
 
         //Constructor
-        public Res(string nombre, uint peso, ushort edad) : this(nombre, peso, edad, null)
-        {
-        }
-
         public Res(string nombre, uint peso, ushort edad, HistoriaClinica historiaClinica) : base(nombre)
         {
             this.Peso = peso;
