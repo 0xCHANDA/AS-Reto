@@ -47,6 +47,10 @@ namespace Bib_Hacienda.Clases
         private readonly PublisherPesoMin publisher_peso_min = new PublisherPesoMin();
         private readonly PublisherPesoVenta publisher_peso_ideal = new PublisherPesoVenta();
 
+        // Unico observador de los publishers de esta hacienda. Se suscribe en el
+        // constructor y no se vuelve a tocar durante las operaciones.
+        private readonly RecolectorMensajes recolectorMensajes = new RecolectorMensajes();
+
 
         //EventHandler
         internal void EventHandler() { }
@@ -74,6 +78,12 @@ namespace Bib_Hacienda.Clases
             this.fabricadorVacunas = fabricadorVacunas ?? new FabricadorVacunas(new List<Vacuna>());
             this.catalogoCreadoresRes = catalogoCreadoresRes ?? CatalogoCreadoresRes.PorDefecto();
             l_vacunas = this.fabricadorVacunas.L_vacunas;
+
+            // Observer: la suscripcion ocurre una sola vez, aqui. Repetir una
+            // operacion ya no agrega handlers al publisher.
+            publisher_peso_min.evt_peso_min += recolectorMensajes.Recibir;
+            publisher_peso_ideal.evt_peso_venta += recolectorMensajes.Recibir;
+            publisher_vacunacion_completa.evt_vacunacion_completada += recolectorMensajes.Recibir;
         }
 
         //Metodo para crear potreros
@@ -216,22 +226,15 @@ namespace Bib_Hacienda.Clases
 
                 res.Alimentar(cantidad);
 
-                string mensaje_eventos = "";
+                string mensaje_eventos;
 
-                publisher_peso_min.evt_peso_min += (mensaje) =>
+                using (CapturaMensajes captura = recolectorMensajes.Capturar())
                 {
-                    if (!string.IsNullOrEmpty(mensaje))
-                        mensaje_eventos += mensaje + "\n";
-                };
+                    publisher_peso_min.Informar_Peso_Min(res);
+                    publisher_peso_ideal.Informar_Peso_Venta(res);
 
-                publisher_peso_ideal.evt_peso_venta += (mensaje) =>
-                {
-                    if (!string.IsNullOrEmpty(mensaje))
-                        mensaje_eventos += mensaje + "\n";
-                };
-
-                publisher_peso_min.Informar_Peso_Min(res);
-                publisher_peso_ideal.Informar_Peso_Venta(res);
+                    mensaje_eventos = captura.Texto();
+                }
 
                 string mensaje_final = $"La res '{res.Nombre}' ha sido alimentada, ahora pesa {res.Peso} kg.";
                 if (!string.IsNullOrEmpty(mensaje_eventos))
@@ -286,16 +289,17 @@ namespace Bib_Hacienda.Clases
 
             L_vacunas.Remove(vacuna);
 
-            string mensaje_vacunacion = "";
-            publisher_vacunacion_completa.evt_vacunacion_completada += (mensaje) =>
-            {
-                mensaje_vacunacion = mensaje;
-            };
+            string mensaje_vacunacion;
 
-            publisher_vacunacion_completa.Informar_Vacunacion_Completada(
-                res,
-                res.CantidadVacunasBacterianas,
-                res.CantidadVacunasVivas);
+            using (CapturaMensajes captura = recolectorMensajes.Capturar())
+            {
+                publisher_vacunacion_completa.Informar_Vacunacion_Completada(
+                    res,
+                    res.CantidadVacunasBacterianas,
+                    res.CantidadVacunasVivas);
+
+                mensaje_vacunacion = captura.Texto();
+            }
 
             return $"Vacuna aplicada correctamente a la res {res.Nombre}. {mensaje_vacunacion}";
         }

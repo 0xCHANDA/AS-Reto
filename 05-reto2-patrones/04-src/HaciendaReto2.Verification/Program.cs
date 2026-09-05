@@ -5,6 +5,7 @@ using System.Reflection;
 using Bib_Hacienda.Clases;
 using Bib_Hacienda.Clases.Construccion;
 using Bib_Hacienda.Clases.Creacion;
+using Bib_Hacienda.Eventos;
 using Bib_Hacienda.enums;
 using Bib_Hacienda.Interfaces;
 using Bib_Hacienda.Reglas;
@@ -59,7 +60,9 @@ namespace HaciendaReto2.Verification
             AplicarVacunaInformaEsquemaIncompleto();
             AplicarVacunaInformaEsquemaCompleto();
 
-            ReportarSuscriptoresAcumulados();
+            SuscripcionNoCreceConLasLlamadas();
+            CapturaConservaElOrdenDeEmision();
+            CapturaAislaOperacionesEntreSi();
 
             Console.WriteLine($"Verificaciones ejecutadas: {_checks}");
             if (_fallos == 0)
@@ -521,9 +524,9 @@ namespace HaciendaReto2.Verification
                 "al cerrar el esquema el aviso cambia a completado");
         }
 
-        // Evidencia del punto de dolor P-03: hoy cada llamada deja su handler
-        // registrado en el publisher. Se reporta, no se afirma todavia como gate.
-        private static void ReportarSuscriptoresAcumulados()
+        // Gate de P-03: la suscripcion se establece una vez, en el constructor,
+        // asi que repetir la operacion no deja handlers acumulados.
+        private static void SuscripcionNoCreceConLasLlamadas()
         {
             var hacienda = HaciendaConRes("S-T", l_tipos_potreros.ternero, "Contada", 6, 100);
 
@@ -532,8 +535,88 @@ namespace HaciendaReto2.Verification
                 hacienda.alimentar_res("S-T", "Contada", 1);
             }
 
-            Console.WriteLine($"[INFO] handlers en evt_peso_min tras 20 llamadas: {ContarSuscriptores(hacienda, "publisher_peso_min", "evt_peso_min")}");
-            Console.WriteLine($"[INFO] handlers en evt_peso_venta tras 20 llamadas: {ContarSuscriptores(hacienda, "publisher_peso_ideal", "evt_peso_venta")}");
+            AssertEqual(1, ContarSuscriptores(hacienda, "publisher_peso_min", "evt_peso_min"),
+                "evt_peso_min conserva un solo handler tras 20 llamadas");
+            AssertEqual(1, ContarSuscriptores(hacienda, "publisher_peso_ideal", "evt_peso_venta"),
+                "evt_peso_venta conserva un solo handler tras 20 llamadas");
+
+            var vacunada = HaciendaConRes("S-V", l_tipos_potreros.ternero, "Pinchada", 6, 200);
+            for (int i = 1; i <= ReglaVacuna.max_bac_ternero; i++)
+            {
+                vacunada.crear_vacuna($"Aftosa{i}", $"SB-{i}", Vencimiento, Aplicacion, 2u);
+            }
+            foreach (var vacuna in vacunada.L_vacunas.ToList())
+            {
+                vacunada.aplicar_vacuna(vacuna, "Pinchada", "S-V");
+            }
+
+            AssertEqual(1, ContarSuscriptores(vacunada, "publisher_vacunacion_completa", "evt_vacunacion_completada"),
+                "evt_vacunacion_completada conserva un solo handler tras varias aplicaciones");
+        }
+
+        // El orden de los avisos es observable: la captura los entrega en el
+        // orden en que los publishers los emitieron, no en uno fijo.
+        private static void CapturaConservaElOrdenDeEmision()
+        {
+            var recolector = new RecolectorMensajes();
+            var potreroMitad = new PublisherPotreroMitad();
+            var pesoMin = new PublisherPesoMin();
+
+            potreroMitad.evt_potrero_mitad += recolector.Recibir;
+            pesoMin.evt_peso_min += recolector.Recibir;
+
+            var potrero = new Potrero("O-T", l_tipos_potreros.ternero);
+            var flaca = new Ternero("Flaca", 100, 6);
+            ushort mitad = (ushort)(ReglaPotrero.max_reses_potrero / 2);
+
+            string avisoMitad = "[Evento] El potrero 'O-T' ha alcanzado la mitad de su capacidad máxima de reses.";
+            string avisoPeso = "[Evento] La res 'Flaca' tiene un peso 100, está en desnutrición.";
+
+            using (var captura = recolector.Capturar())
+            {
+                potreroMitad.Informar_Potrero_Mitad(mitad, potrero);
+                pesoMin.Informar_Peso_Min(flaca);
+
+                AssertEqual(avisoMitad + "\n" + avisoPeso, captura.Texto(),
+                    "la captura entrega los dos avisos en el orden emitido");
+            }
+
+            using (var captura = recolector.Capturar())
+            {
+                pesoMin.Informar_Peso_Min(flaca);
+                potreroMitad.Informar_Potrero_Mitad(mitad, potrero);
+
+                AssertEqual(avisoPeso + "\n" + avisoMitad, captura.Texto(),
+                    "invertir la emision invierte el orden entregado");
+            }
+        }
+
+        private static void CapturaAislaOperacionesEntreSi()
+        {
+            var recolector = new RecolectorMensajes();
+            var pesoMin = new PublisherPesoMin();
+            pesoMin.evt_peso_min += recolector.Recibir;
+
+            var flaca = new Ternero("Flaca", 100, 6);
+
+            using (var primera = recolector.Capturar())
+            {
+                pesoMin.Informar_Peso_Min(flaca);
+                AssertEqual(1, primera.Mensajes.Count, "la primera captura recoge su aviso");
+            }
+
+            // Emitido sin captura abierta: no debe quedar guardado en ningun lado.
+            pesoMin.Informar_Peso_Min(flaca);
+
+            using (var segunda = recolector.Capturar())
+            {
+                AssertEqual("", segunda.Texto(),
+                    "una captura nueva no arrastra mensajes de operaciones anteriores");
+
+                AssertThrows("Ya hay una captura de mensajes abierta.",
+                    () => recolector.Capturar(),
+                    "no se pueden abrir dos capturas a la vez");
+            }
         }
 
         internal static int ContarSuscriptores(object propietario, string campoPublisher, string campoEvento)
