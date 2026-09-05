@@ -72,7 +72,9 @@ namespace HaciendaReto2.Verification
             VacunaVencidaNoAlteraHistoria();
             ResesTienenHistoriasIndependientes();
             FachadaLegacyDeVacunasComparteLaHistoria();
+            SetterLegacyConservaReferencia();
             HistoriaClinicaNoPuedeCompartirseEntreReses();
+            ResRechazaHistoriaClinicaNula();
 
             Console.WriteLine($"Verificaciones ejecutadas: {_checks}");
             if (_fallos == 0)
@@ -714,6 +716,27 @@ namespace HaciendaReto2.Verification
                 "L_vacunas_aplicadas es la misma coleccion de la historia clinica");
         }
 
+        private static void SetterLegacyConservaReferencia()
+        {
+            var res = new Ternero("AliasingLegacy", 200, 6);
+            var vacunas = new List<Vacuna>();
+            var vacuna = new Bacteriana("Rabia", "HC-4", Vencimiento, Aplicacion, 2u);
+
+            res.L_vacunas_aplicadas = vacunas;
+
+            Assert(ReferenceEquals(vacunas, res.L_vacunas_aplicadas),
+                "el setter legacy conserva la referencia asignada");
+            Assert(ReferenceEquals(res.L_vacunas_aplicadas, res.HistoriaClinica.L_vacunas_aplicadas),
+                "la fachada legacy y la historia clinica conservan una sola coleccion");
+
+            vacunas.Add(vacuna);
+
+            AssertEqual(1, res.L_vacunas_aplicadas.Count,
+                "una mutacion externa de la lista legacy se refleja en la res");
+            AssertEqual(1, res.HistoriaClinica.VacunasAplicadas.Count,
+                "una mutacion legacy se refleja en la vista moderna de la historia");
+        }
+
         private static void HistoriaClinicaNoPuedeCompartirseEntreReses()
         {
             var historia = new HistoriaClinica();
@@ -724,6 +747,13 @@ namespace HaciendaReto2.Verification
                 "una historia clinica no puede asignarse a dos reses");
             Assert(ReferenceEquals(historia, primera.HistoriaClinica),
                 "la res conserva su historia clinica propia");
+        }
+
+        private static void ResRechazaHistoriaClinicaNula()
+        {
+            AssertThrows<ArgumentNullException>(
+                () => new ResConHistoria("SinHistoria", 200, 6, null),
+                "SC-3 rechaza una res sin historia clinica");
         }
 
         internal static int ContarSuscriptores(object propietario, string campoPublisher, string campoEvento)
@@ -798,6 +828,29 @@ namespace HaciendaReto2.Verification
                     Console.WriteLine($"        obtenido: {Mostrar(ex.Message)}");
                     _fallos++;
                 }
+            }
+        }
+
+        private static void AssertThrows<TException>(Action accion, string mensaje)
+            where TException : Exception
+        {
+            _checks++;
+            try
+            {
+                accion();
+                Console.WriteLine($"[FALLA] {mensaje}");
+                Console.WriteLine($"        esperaba una excepcion: {typeof(TException).Name}");
+                _fallos++;
+            }
+            catch (TException)
+            {
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[FALLA] {mensaje}");
+                Console.WriteLine($"        esperaba: {typeof(TException).Name}");
+                Console.WriteLine($"        obtenido: {ex.GetType().Name}");
+                _fallos++;
             }
         }
 

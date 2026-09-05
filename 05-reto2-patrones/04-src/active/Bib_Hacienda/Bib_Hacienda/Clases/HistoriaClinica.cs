@@ -13,7 +13,7 @@ namespace Bib_Hacienda.Clases
         public IReadOnlyList<Vacuna> VacunasAplicadas => l_vacunas_aplicadas.AsReadOnly();
         public IReadOnlyList<EventoClinico> EventosClinicos => l_eventos_clinicos.AsReadOnly();
 
-        // Fachada mutable solo para consumidores legacy que ya persisten esta lista.
+        // Fachada legacy: conserva la referencia asignada sin crear otra fuente de verdad.
         public List<Vacuna> L_vacunas_aplicadas
         {
             get => l_vacunas_aplicadas;
@@ -25,7 +25,7 @@ namespace Bib_Hacienda.Clases
                 if (value.Any(v => v == null) || TieneDuplicados(value))
                     throw new ArgumentException("La lista de vacunas contiene registros invalidos.", nameof(value));
 
-                l_vacunas_aplicadas = value.ToList();
+                l_vacunas_aplicadas = value;
             }
         }
 

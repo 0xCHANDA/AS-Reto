@@ -7,9 +7,9 @@ El artefacto canónico es [`diagramas/A3-ASIS-TOBE-LAYERED.drawio`](diagramas/A3
 - `AS-IS` visible y `TO-BE` oculta: recorte actual del baseline.
 - Ambas visibles: diseno futuro completo. Los nodos conservados permanecen en las mismas coordenadas; `TO-BE` solo superpone participantes, roles y relaciones nuevas.
 
-## Alcance
+## Alcance histórico y evolución posterior
 
-El recorte cubre P-01 (Factory Method), P-04 (Builder) y P-03 (Observer). No materializa Facade: el README canónico conserva esa decisión pendiente. Tampoco materializa una solicitud de cambio: sigue pendiente y los elementos de SC-3 pertenecen al borrador histórico.
+Este diagrama conserva el recorte de la Actividad 3: P-01 (Factory Method), P-04 (Builder) y P-03 (Observer). No materializa Facade, que A2 descarta como patrón nuevo. Tampoco se modifica retrospectivamente para SC-3: la solicitud se seleccionó e implementó después en `04-src/active/`, donde `Res` compone una `HistoriaClinica` con eventos clínicos y vacunas aplicadas.
 
 ## Restricciones observables
 

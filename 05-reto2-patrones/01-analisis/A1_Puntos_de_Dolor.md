@@ -99,5 +99,5 @@ grep -rc "Error inesperado en" --include="*.cs" .
 
 ---
 
-> ⚠️ **Aviso fuera del alcance de esta actividad, pero con impacto en la nota**
-> El proyecto **no compila** en su estado actual: `dotnet build` devuelve 6 errores, todos en `Bib_Hacienda`, porque `Viva.enum_l_atenuaciones` no existe. Regla 1 del enunciado: *"Código que no compila o no ejecuta: el criterio 4 se califica en 0.0"* — son 15 % de la nota, y arrastra al criterio 3 porque los diagramas no corresponderían a nada ejecutable. No es un punto de dolor arquitectónico, es un bloqueante de entrega.
+> ⚠️ **Estado de compilación verificado posteriormente**
+> La observación histórica sobre seis errores de `Viva.enum_l_atenuaciones` ya no se reproduce: `dotnet build` de `Bib_Hacienda.csproj` pasa con dos advertencias (CS0169 en `HistoriaClinica.l_vacunas_aplicadas` y CS0649 en `Hacienda.l_inventarios`). El snapshot sigue sin modificarse; esta nota actualiza la evidencia de ejecución, no el análisis histórico.

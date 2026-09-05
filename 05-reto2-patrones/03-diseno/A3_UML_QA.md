@@ -3,7 +3,7 @@
 ## Baseline y fuentes
 
 - HEAD: `c56b193924a799345004fa88b7cb97c5c2d1c1b6` en `main`.
-- Código: `04-src/baseline-input-2026-08-31/` (solo lectura).
+- Código observado: `04-src/baseline-input-2026-08-31/` (solo lectura). La evolución actual vive en `04-src/active/`.
 - Decisiones: `A1_Puntos_de_Dolor.md`, `A2_Decision_de_Patrones.md`, `README.md`.
 - Históricos: solo contexto; no se usaron como plantilla.
 
@@ -12,8 +12,8 @@
 - Factory Method para P-01: `Potrero` es Client; `ICreadorRes` Creator; tres creadores concretos construyen `Ternero`, `Cebon` y `Novillo`; `Program` es el composition root.
 - Builder para P-04: `IConstructorVacuna` es Builder y `FabricadorVacunas` es ConcreteBuilder; `Vacuna` es Product. El cliente conserva construcción individual/lote con el tipo configurado.
 - Observer para P-03: publishers existentes son Subjects; `IObservadorMensaje` es Observer; `RecolectorMensajes` es ConcreteObserver; `Program` suscribe una sola vez.
-- Facade: `PENDING HUMAN DECISION`; no representado como adoptado.
-- Solicitud de cambio: `PENDING`; no representada.
+- Facade: descartado por A2; no representado como adoptado.
+- Solicitud de cambio: este diagrama conserva el estado anterior a SC-3; la implementación posterior no se representa retrospectivamente aquí.
 
 ## Conteo y relaciones
 
@@ -33,5 +33,5 @@
 
 ## Riesgos deliberadamente no resueltos
 
-- La implementación no existe todavía; `IConstructorVacuna` y `IObservadorMensaje` son diseño futuro derivado de A2.
-- El baseline mantiene sus fallos de compilación conocidos; no se modificó.
+- La implementación de patrones y SC-3 existe en `04-src/active/`; este QA no reemplaza su verificación ejecutable.
+- El baseline sigue sin modificarse y su build actual pasa con advertencias.
