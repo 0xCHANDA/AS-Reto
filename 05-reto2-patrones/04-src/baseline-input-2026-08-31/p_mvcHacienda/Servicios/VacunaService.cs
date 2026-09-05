@@ -1,6 +1,6 @@
 ﻿using Bib_Hacienda.Clases;
+using Bib_Hacienda.enums;
 using Bib_Hacienda.Interfaces;
-using static Bib_Hacienda.Clases.Viva;
 
 namespace p_mvcHacienda.Servicios
 {
@@ -23,7 +23,7 @@ namespace p_mvcHacienda.Servicios
             _persistenciaReses = persistenciaReses;
         }
 
-        public string CrearVacuna(string nombre, string lote, DateTime fechaVencimiento, DateTime fechaAplicacion, uint? periodoAplicacion, enum_l_atenuaciones? atenuacion)
+        public string CrearVacuna(string nombre, string lote, DateTime fechaVencimiento, DateTime fechaAplicacion, uint? periodoAplicacion, Atenuaciones? atenuacion)
         {
             try
             {

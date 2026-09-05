@@ -1,15 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Bib_Hacienda.Clases.Construccion;
 using Bib_Hacienda.enums;
+using Bib_Hacienda.Interfaces;
 
 namespace Bib_Hacienda.Clases
 {
-    // Responsabilidad única: crear y añadir vacunas al inventario.
-    // Movido desde Hacienda para que la fachada conserve solo coordinación.
-    // Sigue siendo una clase concreta simple: no introduce factories,
-    // registries ni reflexión. Permanece acoplada a las clases concretas
-    // Bacteriana/Viva existentes (deuda consciente: solo hay dos tipos).
+    // Director del Builder de vacunas: conoce la secuencia comun de creacion
+    // (validar, construir, registrar, resumir) y la de lote (numerar, omitir
+    // duplicados, contar), pero no que variante se esta creando. Cada variante
+    // vive en su IVacunaBuilder.
     public class FabricadorVacunas
     {
         private readonly List<Vacuna> l_vacunas;
@@ -24,79 +25,50 @@ namespace Bib_Hacienda.Clases
         // Vacuna bacteriana individual
         public string Crear(string nombre, string lote, DateTime fecha_vencimiento, DateTime fecha_aplicacion, uint periodo_aplicacion)
         {
-            try
-            {
-                ValidarDatosBasicos(nombre, lote, fecha_vencimiento, fecha_aplicacion);
-
-                Bacteriana nueva_vacuna = new Bacteriana(nombre, lote, fecha_vencimiento, fecha_aplicacion, periodo_aplicacion);
-                l_vacunas.Add(nueva_vacuna);
-
-                return $"Vacuna bacteriana '{nombre}' del lote '{lote}' agregada al inventario con éxito. Período de aplicación: {periodo_aplicacion} semanas.";
-            }
-            catch (Exception er)
-            {
-                throw new Exception("Error inesperado en el método crear_vacuna (bacteriana): " + er.Message);
-            }
+            return Crear(new BuilderBacteriana(periodo_aplicacion), nombre, lote, fecha_vencimiento, fecha_aplicacion);
         }
 
         // Vacuna viva individual
         public string Crear(string nombre, string lote, DateTime fecha_vencimiento, DateTime fecha_aplicacion, Atenuaciones grado_atenuacion)
         {
-            try
-            {
-                ValidarDatosBasicos(nombre, lote, fecha_vencimiento, fecha_aplicacion);
-
-                Viva nueva_vacuna = new Viva(nombre, lote, fecha_vencimiento, fecha_aplicacion, grado_atenuacion);
-                l_vacunas.Add(nueva_vacuna);
-
-                return $"Vacuna viva '{nombre}' del lote '{lote}' agregada al inventario con éxito. Grado de atenuación: {(int)grado_atenuacion}.";
-            }
-            catch (Exception er)
-            {
-                throw new Exception("Error inesperado en el método crear_vacuna (viva): " + er.Message);
-            }
+            return Crear(new BuilderViva(grado_atenuacion), nombre, lote, fecha_vencimiento, fecha_aplicacion);
         }
 
         // Lote de vacunas bacterianas
         public string CrearLote(string nombre, string lote_base, DateTime fecha_vencimiento, DateTime fecha_aplicacion, uint periodo_aplicacion, uint cantidad)
         {
-            try
-            {
-                ValidarCantidadYLoteBase(nombre, lote_base, fecha_vencimiento, fecha_aplicacion, cantidad);
-
-                int vacunas_creadas = 0;
-
-                for (int i = 1; i <= cantidad; i++)
-                {
-                    string lote_numerado = $"{lote_base}-{i:D3}";
-
-                    if (l_vacunas.Any(v => v.Lote.Equals(lote_numerado, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        continue;
-                    }
-
-                    Bacteriana nueva_vacuna = new Bacteriana(nombre, lote_numerado, fecha_vencimiento, fecha_aplicacion, periodo_aplicacion);
-                    l_vacunas.Add(nueva_vacuna);
-                    vacunas_creadas++;
-                }
-
-                if (vacunas_creadas == 0)
-                    throw new Exception($"No se pudo crear ninguna vacuna. Todos los lotes ya existen en el inventario");
-
-                return $"Lote de vacunas bacterianas creado con éxito:\n" +
-                "- Nombre: {nombre}\n" +
-                $"- Cantidad creada: {vacunas_creadas} de {cantidad}\n" +
-                $"- Lotes: {lote_base}-001 a {lote_base}-{vacunas_creadas:D3}\n" +
-                $"- Período de aplicación: {periodo_aplicacion} semanas";
-            }
-            catch (Exception er)
-            {
-                throw new Exception("Error inesperado en el método crear_vacuna (lote bacteriano): " + er.Message);
-            }
+            return CrearLote(new BuilderBacteriana(periodo_aplicacion), nombre, lote_base, fecha_vencimiento, fecha_aplicacion, cantidad);
         }
 
         // Lote de vacunas vivas
         public string CrearLote(string nombre, string lote_base, DateTime fecha_vencimiento, DateTime fecha_aplicacion, Atenuaciones grado_atenuacion, uint cantidad)
+        {
+            return CrearLote(new BuilderViva(grado_atenuacion), nombre, lote_base, fecha_vencimiento, fecha_aplicacion, cantidad);
+        }
+
+        // Secuencia comun de creacion individual. Publica para que una variante
+        // nueva reutilice al director sin modificarlo.
+        public string Crear(IVacunaBuilder builder, string nombre, string lote, DateTime fecha_vencimiento, DateTime fecha_aplicacion)
+        {
+            try
+            {
+                ValidarDatosBasicos(nombre, lote, fecha_vencimiento, fecha_aplicacion);
+
+                Vacuna nueva_vacuna = builder.Construir(nombre, lote, fecha_vencimiento, fecha_aplicacion);
+                l_vacunas.Add(nueva_vacuna);
+
+                return $"Vacuna {builder.Variante} '{nombre}' del lote '{lote}' agregada al inventario con éxito. {builder.DetalleEspecifico}.";
+            }
+            catch (Exception er)
+            {
+                throw new Exception($"Error inesperado en el método crear_vacuna ({builder.Variante}): " + er.Message);
+            }
+        }
+
+        // Secuencia comun de creacion por lote: numera, omite los lotes que ya
+        // existen, cuenta las creadas y resume. La variante solo aporta el
+        // producto y las partes propias del mensaje.
+        public string CrearLote(IVacunaBuilder builder, string nombre, string lote_base, DateTime fecha_vencimiento, DateTime fecha_aplicacion, uint cantidad)
         {
             try
             {
@@ -113,23 +85,22 @@ namespace Bib_Hacienda.Clases
                         continue;
                     }
 
-                    Viva nueva_vacuna = new Viva(nombre, lote_numerado, fecha_vencimiento, fecha_aplicacion, grado_atenuacion);
-                    l_vacunas.Add(nueva_vacuna);
+                    l_vacunas.Add(builder.Construir(nombre, lote_numerado, fecha_vencimiento, fecha_aplicacion));
                     vacunas_creadas++;
                 }
 
                 if (vacunas_creadas == 0)
                     throw new Exception($"No se pudo crear ninguna vacuna. Todos los lotes ya existen en el inventario");
 
-                return $"Lote de vacunas vivas creado con éxito:\n" +
-                $"- Nombre: {nombre}\n" +
+                return $"Lote de vacunas {builder.VariantePlural} creado con éxito:\n" +
+                $"- Nombre: {builder.NombreEnResumenDeLote(nombre)}\n" +
                 $"- Cantidad creada: {vacunas_creadas} de {cantidad}\n" +
                 $"- Lotes: {lote_base}-001 a {lote_base}-{vacunas_creadas:D3}\n" +
-                $"- Grado de atenuación: {(int)grado_atenuacion}";
+                $"- {builder.DetalleEspecifico}";
             }
             catch (Exception er)
             {
-                throw new Exception("Error inesperado en el método crear_vacuna (lote vivo): " + er.Message);
+                throw new Exception($"Error inesperado en el método crear_vacuna (lote {builder.VarianteLote}): " + er.Message);
             }
         }
 

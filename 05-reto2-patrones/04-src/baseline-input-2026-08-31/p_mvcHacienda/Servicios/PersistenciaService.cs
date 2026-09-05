@@ -2,8 +2,8 @@ using Bib_Hacienda.Clases;
 using Bib_Hacienda.Clases.Creacion;
 using Bib_Hacienda.Interfaces;
 using Microsoft.AspNetCore.Hosting;
+using Bib_Hacienda.enums;
 using static Bib_Hacienda.Clases.Potrero;
-using static Bib_Hacienda.Clases.Viva;
 using System.Globalization;
 
 namespace p_mvcHacienda.Servicios
@@ -291,7 +291,7 @@ namespace p_mvcHacienda.Servicios
                         }
                         else
                         {
-                            vacuna = new Viva(nombre, lote, fechaVenc, fechaAplic, enum_l_atenuaciones.Atenuacion10);
+                            vacuna = new Viva(nombre, lote, fechaVenc, fechaAplic, Atenuaciones.Atenuacion10);
                         }
 
                         vacunas.Add(vacuna);
@@ -399,7 +399,7 @@ namespace p_mvcHacienda.Servicios
                                 }
                                 else
                                 {
-                                    vacuna = new Viva(nombreVacuna, lote, fechaVenc, fechaAplic, enum_l_atenuaciones.Atenuacion10);
+                                    vacuna = new Viva(nombreVacuna, lote, fechaVenc, fechaAplic, Atenuaciones.Atenuacion10);
                                 }
 
                                 res.L_vacunas_aplicadas.Add(vacuna);

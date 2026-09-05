@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Bib_Hacienda.enums;
 using p_mvcHacienda.Servicios;
-using static Bib_Hacienda.Clases.Viva;
 using System.Globalization;
 
 namespace p_mvcHacienda.Controllers
@@ -55,7 +55,7 @@ namespace p_mvcHacienda.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(string tipoVacuna, string nombre, string lote,
             string fechaVencimiento, string fechaAplicacion,    
-            uint? periodoAplicacion, enum_l_atenuaciones? atenuacion)
+            uint? periodoAplicacion, Atenuaciones? atenuacion)
         {
             try
             {

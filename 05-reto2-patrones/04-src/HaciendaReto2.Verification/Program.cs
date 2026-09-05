@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Bib_Hacienda.Clases;
+using Bib_Hacienda.Clases.Construccion;
 using Bib_Hacienda.Clases.Creacion;
 using Bib_Hacienda.enums;
 using Bib_Hacienda.Interfaces;
@@ -48,6 +49,7 @@ namespace HaciendaReto2.Verification
             FechaDeVencimientoNoPosteriorFalla();
             LoteIndividualDuplicadoFalla();
             CantidadDeLoteFueraDeRangoFalla();
+            DirectorAdmiteVarianteNuevaSinModificarse();
 
             // --- Eventos y suscripciones (P-03, Observer) ---
             AlimentarInformaDesnutricion();
@@ -386,6 +388,39 @@ namespace HaciendaReto2.Verification
                 "cantidad mayor a 100 falla");
         }
 
+        // OCP: una variante nueva de vacuna reutiliza la secuencia del director
+        // aportando solo sus partes. FabricadorVacunas no se modifica, y por eso
+        // este builder vive unicamente en el verifier.
+        private static void DirectorAdmiteVarianteNuevaSinModificarse()
+        {
+            var inventario = new List<Vacuna>();
+            var fabricador = new FabricadorVacunas(inventario);
+            var builder = new BuilderVerificador();
+
+            AssertEqual(
+                "Vacuna verificadora 'Experimental' del lote 'VER-1' agregada al inventario con éxito. Dosis de prueba: 7.",
+                fabricador.Crear(builder, "Experimental", "VER-1", Vencimiento, Aplicacion),
+                "el director arma el mensaje individual de una variante que no conocia");
+
+            AssertEqual(
+                "Lote de vacunas verificadoras creado con éxito:\n" +
+                "- Nombre: Experimental\n" +
+                "- Cantidad creada: 2 de 2\n" +
+                "- Lotes: VER-L-001 a VER-L-002\n" +
+                "- Dosis de prueba: 7",
+                fabricador.CrearLote(builder, "Experimental", "VER-L", Vencimiento, Aplicacion, 2u),
+                "el director reutiliza el algoritmo de lote con la variante nueva");
+
+            AssertEqual(3, inventario.Count, "la variante nueva llega al mismo inventario");
+            Assert(inventario.All(v => v is VacunaVerificadora),
+                "el director agrega exactamente el producto que devuelve el builder");
+
+            AssertThrows(
+                "Error inesperado en el método crear_vacuna (lote verificador): No se pudo crear ninguna vacuna. Todos los lotes ya existen en el inventario",
+                () => fabricador.CrearLote(builder, "Experimental", "VER-L", Vencimiento, Aplicacion, 2u),
+                "las etiquetas de error tambien salen de la variante");
+        }
+
         // ------------------------------------------------------------------
         // Eventos
         // ------------------------------------------------------------------
@@ -605,6 +640,39 @@ namespace HaciendaReto2.Verification
         public override byte MaxVacunasBacterianas => 1;
 
         public override byte MaxVacunasVivas => 1;
+    }
+
+    // Variante de vacuna definida solo en el verifier. Tipo devuelve un valor
+    // del enum existente porque TipoVacuna duplica la jerarquia: es P-05, punto
+    // declarado y no intervenido en este reto.
+    internal class VacunaVerificadora : Vacuna
+    {
+        public VacunaVerificadora(string nombre, string lote, DateTime fechaVencimiento, DateTime fechaAplicacion)
+            : base(nombre, lote, fechaVencimiento, fechaAplicacion)
+        {
+        }
+
+        public override TipoVacuna Tipo => TipoVacuna.Bacteriana;
+
+        public override bool PuedeAplicarseA(Res res) => true;
+    }
+
+    internal class BuilderVerificador : IVacunaBuilder
+    {
+        public string Variante => "verificadora";
+
+        public string VariantePlural => "verificadoras";
+
+        public string VarianteLote => "verificador";
+
+        public string DetalleEspecifico => "Dosis de prueba: 7";
+
+        public string NombreEnResumenDeLote(string nombre) => nombre;
+
+        public Vacuna Construir(string nombre, string lote, DateTime fechaVencimiento, DateTime fechaAplicacion)
+        {
+            return new VacunaVerificadora(nombre, lote, fechaVencimiento, fechaAplicacion);
+        }
     }
 
     internal class CreadorVerificador : ICreadorRes

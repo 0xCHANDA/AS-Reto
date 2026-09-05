@@ -1,4 +1,4 @@
-﻿@using static Bib_Hacienda.Clases.Viva
+﻿@using Bib_Hacienda.enums
 
 @{
     ViewData["Title"] = "💉 Crear Vacuna";
@@ -98,9 +98,9 @@
         <label for="atenuacion" class="form-label fw-bold">Nivel de Atenuación</label>
               <select name="atenuacion" class="form-select form-select-lg">
           <option value="">-- Seleccione nivel --</option>
-      <option value="@enum_l_atenuaciones.Atenuacion10">Atenuación 10%</option>
-             <option value="@enum_l_atenuaciones.Atenuacion20">Atenuación 20%</option>
-      <option value="@enum_l_atenuaciones.Atenuacion30">Atenuación 30%</option>
+      <option value="@Atenuaciones.Atenuacion10">Atenuación 10%</option>
+             <option value="@Atenuaciones.Atenuacion20">Atenuación 20%</option>
+      <option value="@Atenuaciones.Atenuacion30">Atenuación 30%</option>
         </select>
           <small class="form-text text-muted">Porcentaje de atenuación del virus</small>
             </div>
