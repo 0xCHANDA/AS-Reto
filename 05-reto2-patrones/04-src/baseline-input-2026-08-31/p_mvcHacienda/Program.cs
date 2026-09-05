@@ -1,4 +1,5 @@
 using Bib_Hacienda.Clases;
+using Bib_Hacienda.Clases.Creacion;
 using Bib_Hacienda.Clases.Validaciones;
 using Bib_Hacienda.Interfaces;
 using Castle.DynamicProxy;
@@ -68,6 +69,14 @@ namespace p_mvcHacienda
                     sp.GetRequiredService<IInterceptor>());
             });
 
+            // Factory Method: los creadores de res y su catálogo se registran aquí,
+            // que es el único punto que decide qué categorías existen.
+            builder.Services.AddSingleton<ICreadorRes, CreadorTernero>();
+            builder.Services.AddSingleton<ICreadorRes, CreadorCebon>();
+            builder.Services.AddSingleton<ICreadorRes, CreadorNovillo>();
+            builder.Services.AddSingleton<CatalogoCreadoresRes>(sp =>
+                new CatalogoCreadoresRes(sp.GetServices<ICreadorRes>()));
+
             // Persistencia: un único servicio que implementa todos los puertos
             builder.Services.AddSingleton<PersistenciaService>();
             builder.Services.AddSingleton<IPersistenciaPotreros>(sp => sp.GetRequiredService<PersistenciaService>());
@@ -82,7 +91,8 @@ namespace p_mvcHacienda
                 var persistencia = sp.GetRequiredService<PersistenciaService>();
                 var registroVentas = new RegistroVenta();
                 var fabricadorVacunas = new FabricadorVacunas(new List<Vacuna>());
-                var hacienda = new Hacienda(registroVentas, fabricadorVacunas);
+                var catalogoCreadoresRes = sp.GetRequiredService<CatalogoCreadoresRes>();
+                var hacienda = new Hacienda(registroVentas, fabricadorVacunas, catalogoCreadoresRes);
 
                 try
                 {

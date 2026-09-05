@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Bib_Hacienda.Clases;
+using Bib_Hacienda.Clases.Creacion;
 using Bib_Hacienda.enums;
+using Bib_Hacienda.Interfaces;
 using Bib_Hacienda.Reglas;
 using static Bib_Hacienda.Clases.Potrero;
 
@@ -31,6 +33,8 @@ namespace HaciendaReto2.Verification
             PotreroRechazaEdadQueNoCorresponde();
             PotreroRechazaResDuplicada();
             PotreroRechazaResCuandoEstaLleno();
+            CatalogoResuelveCreadorPorEdadYPorCategoria();
+            CatalogoAdmiteCategoriaNuevaSinTocarClientes();
 
             // --- Construccion de vacunas (P-04, Builder) ---
             CrearBacterianaIndividual();
@@ -180,6 +184,44 @@ namespace HaciendaReto2.Verification
                 "Error inesperado en el método anadir_res_potrero: El potrero L-T está lleno.",
                 () => hacienda.anadir_res_potrero("L-T", "Sobrante", 6, 160),
                 "el potrero lleno rechaza la res siguiente");
+        }
+
+        private static void CatalogoResuelveCreadorPorEdadYPorCategoria()
+        {
+            var catalogo = CatalogoCreadoresRes.PorDefecto();
+
+            AssertEqual("Ternero", catalogo.ParaEdad(ReglaRes.edad_max_ternero).Categoria,
+                "el catalogo resuelve Ternero en su edad limite");
+            AssertEqual("Cebon", catalogo.ParaEdad((ushort)(ReglaRes.edad_max_ternero + 1)).Categoria,
+                "el catalogo resuelve Cebon apenas se pasa el limite de ternero");
+            AssertEqual("Novillo", catalogo.ParaEdad((ushort)(ReglaRes.edad_max_cebon + 1)).Categoria,
+                "el catalogo resuelve Novillo apenas se pasa el limite de cebon");
+
+            Assert(catalogo.ParaCategoria("cebon") != null,
+                "el catalogo resuelve la categoria persistida sin distinguir mayusculas");
+            Assert(catalogo.ParaCategoria("Bufalo") == null,
+                "una categoria no registrada no resuelve creador");
+
+            Assert(catalogo.ParaEdad(6).Crear("Nueva", 160, 6) is Ternero,
+                "el creador resuelto instancia el subtipo que declara");
+        }
+
+        // OCP: una categoria nueva entra registrando su creador. Ni Hacienda ni
+        // la persistencia se modifican, y por eso este creador vive solo aqui.
+        private static void CatalogoAdmiteCategoriaNuevaSinTocarClientes()
+        {
+            var catalogo = new CatalogoCreadoresRes(new ICreadorRes[] { new CreadorVerificador() });
+
+            Res res = catalogo.ParaEdad(200).Crear("Experimental", 900, 200);
+
+            Assert(res is ResVerificador,
+                "un creador registrado despues cubre edades que ninguna categoria actual atiende");
+            AssertEqual("ResVerificador", catalogo.ParaCategoria("ResVerificador").Categoria,
+                "la categoria nueva se resuelve por su discriminador persistido");
+
+            AssertThrows("Ninguna categoría de res cubre una edad de 5 meses.",
+                () => catalogo.ParaEdad(5),
+                "un catalogo sin creador aplicable lo dice explicitamente");
         }
 
         // ------------------------------------------------------------------
@@ -549,6 +591,31 @@ namespace HaciendaReto2.Verification
             }
 
             return valor.ToString().Replace("\n", "\\n");
+        }
+    }
+
+    // Categoria de res definida solo en el verifier, para demostrar que agregar
+    // una no obliga a modificar Hacienda ni PersistenciaService.
+    internal class ResVerificador : Res
+    {
+        public ResVerificador(string nombre, uint peso, ushort edad) : base(nombre, peso, edad)
+        {
+        }
+
+        public override byte MaxVacunasBacterianas => 1;
+
+        public override byte MaxVacunasVivas => 1;
+    }
+
+    internal class CreadorVerificador : ICreadorRes
+    {
+        public string Categoria => nameof(ResVerificador);
+
+        public bool AplicaA(ushort edad) => edad > 100;
+
+        public Res Crear(string nombre, uint peso, ushort edad)
+        {
+            return new ResVerificador(nombre, peso, edad);
         }
     }
 }

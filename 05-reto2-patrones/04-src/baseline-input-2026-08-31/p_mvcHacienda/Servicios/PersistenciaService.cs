@@ -1,4 +1,5 @@
 using Bib_Hacienda.Clases;
+using Bib_Hacienda.Clases.Creacion;
 using Bib_Hacienda.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using static Bib_Hacienda.Clases.Potrero;
@@ -25,13 +26,16 @@ namespace p_mvcHacienda.Servicios
         private readonly IValidadorVacuna _validadorVacuna;
         private readonly IValidadorVenta _validadorVenta;
 
+        private readonly CatalogoCreadoresRes _catalogoCreadoresRes;
+
         public PersistenciaService(
             IWebHostEnvironment env,
             IHttpContextAccessor httpContextAccessor,
             IValidadorPotrero validadorPotrero,
             IValidadorRes validadorRes,
             IValidadorVacuna validadorVacuna,
-            IValidadorVenta validadorVenta)
+            IValidadorVenta validadorVenta,
+            CatalogoCreadoresRes catalogoCreadoresRes)
         {
             _directorioArchivos = Path.Combine(env.ContentRootPath, "Datos");
 
@@ -48,6 +52,10 @@ namespace p_mvcHacienda.Servicios
             _validadorRes = validadorRes;
             _validadorVacuna = validadorVacuna;
             _validadorVenta = validadorVenta;
+
+            // Reconstruir reses es crear reses: se reutilizan los creadores en
+            // vez de conocer aqui las clases concretas.
+            _catalogoCreadoresRes = catalogoCreadoresRes;
         }
 
         #region IPersistenciaPotreros
@@ -180,7 +188,8 @@ namespace p_mvcHacienda.Servicios
                         var potrero = potreros.FirstOrDefault(p => string.Equals(p.Identificacion, nombrePotrero, StringComparison.OrdinalIgnoreCase));
                         if (potrero != null)
                         {
-                            potrero.anadir_res(nombreRes, edad, peso);
+                            Res res = _catalogoCreadoresRes.ParaEdad(edad).Crear(nombreRes, peso, edad);
+                            potrero.agregar(res);
                         }
                     }
                 }
@@ -503,27 +512,15 @@ namespace p_mvcHacienda.Servicios
                         string tipo = partes[3].Trim();
                         string nombre = partes[4];
 
+                        ICreadorRes creadorRes = _catalogoCreadoresRes.ParaCategoria(tipo);
+
                         Producto producto;
-                        if (tipo.Equals("Ternero", StringComparison.OrdinalIgnoreCase)
+                        if (creadorRes != null
                             && partes.Length >= 7
-                            && uint.TryParse(partes[5].Trim(), out uint pesoT) && pesoT > 0
-                            && ushort.TryParse(partes[6].Trim(), out ushort edadT) && edadT > 0)
+                            && uint.TryParse(partes[5].Trim(), out uint pesoRes) && pesoRes > 0
+                            && ushort.TryParse(partes[6].Trim(), out ushort edadRes) && edadRes > 0)
                         {
-                            producto = new Ternero(nombre, pesoT, edadT);
-                        }
-                        else if (tipo.Equals("Novillo", StringComparison.OrdinalIgnoreCase)
-                            && partes.Length >= 7
-                            && uint.TryParse(partes[5].Trim(), out uint pesoN) && pesoN > 0
-                            && ushort.TryParse(partes[6].Trim(), out ushort edadN) && edadN > 0)
-                        {
-                            producto = new Novillo(nombre, pesoN, edadN);
-                        }
-                        else if (tipo.Equals("Cebon", StringComparison.OrdinalIgnoreCase)
-                            && partes.Length >= 7
-                            && uint.TryParse(partes[5].Trim(), out uint pesoC) && pesoC > 0
-                            && ushort.TryParse(partes[6].Trim(), out ushort edadC) && edadC > 0)
-                        {
-                            producto = new Cebon(nombre, pesoC, edadC);
+                            producto = creadorRes.Crear(nombre, pesoRes, edadRes);
                         }
                         else if (tipo.Equals("Lacteo", StringComparison.OrdinalIgnoreCase))
                         {
@@ -566,13 +563,12 @@ namespace p_mvcHacienda.Servicios
                             potrero = new Potrero(potreroId, l_tipos_potreros.ternero);
                         }
 
-                        Res res = resTipo switch
-                        {
-                            "Ternero" => new Ternero(resNombre, resPeso, resEdad),
-                            "Novillo" => new Novillo(resNombre, resPeso, resEdad),
-                            "Cebon" => new Cebon(resNombre, resPeso, resEdad),
-                            _ => new Ternero(resNombre, resPeso, resEdad)
-                        };
+                        // Respaldo legacy conservado: un tipo desconocido se recarga
+                        // como Ternero, igual que antes del catalogo.
+                        ICreadorRes creadorLegacy = _catalogoCreadoresRes.ParaCategoria(resTipo)
+                            ?? _catalogoCreadoresRes.ParaCategoria(nameof(Ternero));
+
+                        Res res = creadorLegacy.Crear(resNombre, resPeso, resEdad);
 
                         ventas.Add(new Venta(potrero, fecha, res, monto));
                     }

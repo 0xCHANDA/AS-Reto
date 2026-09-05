@@ -1,4 +1,5 @@
-﻿using Bib_Hacienda.enums;
+﻿using Bib_Hacienda.Clases.Creacion;
+using Bib_Hacienda.enums;
 using Bib_Hacienda.Eventos;
 using Bib_Hacienda.Interfaces;
 using Bib_Hacienda.Reglas;
@@ -23,6 +24,7 @@ namespace Bib_Hacienda.Clases
         private readonly RegistroVenta registroVentas;
         private List<Vacuna> l_vacunas;
         private readonly FabricadorVacunas fabricadorVacunas;
+        private readonly CatalogoCreadoresRes catalogoCreadoresRes;
 
         //Accesores públicos para los servicios (get público, set privado)
         public List<Potrero> L_potreros
@@ -59,10 +61,18 @@ namespace Bib_Hacienda.Clases
         // Constructor que permite proporcionar colaboradores desde la raíz de
         // composición; el constructor vacío se conserva por compatibilidad.
         public Hacienda(RegistroVenta registroVentas, FabricadorVacunas fabricadorVacunas)
+            : this(registroVentas, fabricadorVacunas, catalogoCreadoresRes: null)
+        {
+        }
+
+        // Sobrecarga que recibe además el catálogo de creadores de res; las dos
+        // anteriores se conservan para los consumidores existentes.
+        public Hacienda(RegistroVenta registroVentas, FabricadorVacunas fabricadorVacunas, CatalogoCreadoresRes catalogoCreadoresRes)
         {
             l_potreros = new List<Potrero>();
             this.registroVentas = registroVentas ?? new RegistroVenta();
             this.fabricadorVacunas = fabricadorVacunas ?? new FabricadorVacunas(new List<Vacuna>());
+            this.catalogoCreadoresRes = catalogoCreadoresRes ?? CatalogoCreadoresRes.PorDefecto();
             l_vacunas = this.fabricadorVacunas.L_vacunas;
         }
 
@@ -154,21 +164,9 @@ namespace Bib_Hacienda.Clases
             try
             {
                 Potrero potrero = buscar_potrero(id_potrero);
-                Res res;
 
-                if (edad <= ReglaRes.edad_max_ternero)
-                {
-                    res = new Ternero(nombre, peso, edad);
-                }
-                else if (edad <= ReglaRes.edad_max_cebon)
-                {
-                    res = new Cebon(nombre, peso, edad);
-                }
-                else
-                {
-                    res = new Novillo(nombre, peso, edad);
-                }
-                
+                Res res = catalogoCreadoresRes.ParaEdad(edad).Crear(nombre, peso, edad);
+
                 potrero.agregar(res);
 
                 return $"La res {nombre} ha sido añadida al potrero {potrero.Identificacion} con exito.";
