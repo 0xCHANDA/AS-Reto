@@ -1,0 +1,21 @@
+# Caracterizacion AS-IS (03-src/redisenado/HaciendaNEW)
+C01|OK|El potrero P1 se a añadido a la hacienda.|potreros=1
+C02|EXCEPTION|Exception:Error inesperado en el metodo crear_potrero: Ya existe un potrero con el nombre 'p1'.|-
+C03|OK|La res Lola ha sido añadida al potrero P1 con exito.\n[Evento] La res 'Lola' tiene un peso 100, está en desnutrición.|reses=1;tipo=Ternero
+C04|EXCEPTION|Exception:Error inesperado en el método anadir_res_potrero: Error inesperado en el metodo anadir_res: La res no puede ser añadida al potrero P1 porque su edad no corresponde al tipo de potrero|-
+C05|OK|La res Manchas ha sido añadida al potrero PC con exito.|tipo=Cebon
+C06|OK|La res Toro ha sido añadida al potrero PN con exito.|tipo=Novillo
+C07|OK|La res 'Lola' ha sido alimentada, ahora pesa 101 kg.\n[Evento] La res 'Lola' tiene un peso 101, está en desnutrición.|peso=101
+C08|OK|Vacuna bacteriana 'Bovina' del lote 'L1' agregada al inventario con éxito. Período de aplicación: 4 semanas.|vacunas=1
+C09|EXCEPTION|Exception:Error inesperado en el método crear_vacuna (bacteriana): Ya existe una vacuna con el lote 'l1' en el inventario|-
+C10|OK|Vacuna viva 'Viral' del lote 'V1' agregada al inventario con éxito. Grado de atenuación: 10.|vacunas=1
+C11|OK|Lote de vacunas bacterianas creado con éxito:\n- Nombre: {nombre}\n- Cantidad creada: 3 de 3\n- Lotes: LB-001 a LB-003\n- Período de aplicación: 4 semanas|vacunas=3
+C12|OK|Lote de vacunas vivas creado con éxito:\n- Nombre: LoteV\n- Cantidad creada: 2 de 2\n- Lotes: LV-001 a LV-002\n- Grado de atenuación: 10|vacunas=2
+C13|EXCEPTION|Exception:Error inesperado en el método crear_vacuna (bacteriana): el valor del periodo de aplicacion debe estar entre 2 y 4 semanas|-
+C14|OK|Vacuna aplicada correctamente a la res Lola. [Evento] La res 'Lola' aún no ha completado su esquema de vacunación. Bacterianas: 1, Vivas: 0|inventario=0;aplicadas=1
+C15|EXCEPTION|Exception:Error inesperado en el método crear_vacuna (bacteriana): La fecha de vencimiento debe ser posterior a la fecha de aplicación|-
+C16|EXCEPTION|Exception:Error inesperado en el metodo aplicar_vacuna: La vacuna 'Bovina' ya fue aplicada a la res 'Lola'.|-
+C17|OK|Error inesperado en el metodo aplicar_vacuna: No se puede aplicar más vacunas bacterianas a la res 'Lola'. Ya tiene las 3 permitidas.|aplicadas=3
+C18|OK|Venta de la res Lola realizada con exito|reses=0;ventas=1
+C19|OK|La res 'Gorda' ha sido alimentada, ahora pesa 410 kg.\n[Evento] La res 'Gorda' tiene un peso 410, apta para venta.|peso=410
+C20|OK|La res 'Lola' ha sido alimentada, ahora pesa 102 kg.\n[Evento] La res 'Lola' tiene un peso 102, está en desnutrición.|iguales=True

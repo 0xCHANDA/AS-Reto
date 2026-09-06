@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Caracterizacion</RootNamespace>
+    <RollForward>LatestMajor</RollForward>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Comun/Escenarios.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../04-src/active/Bib_Hacienda/Bib_Hacienda/Bib_Hacienda.csproj" />
+    <ProjectReference Include="../../../04-src/active/p_mvcHacienda/p_mvcHacienda.csproj" />
+  </ItemGroup>
+</Project>

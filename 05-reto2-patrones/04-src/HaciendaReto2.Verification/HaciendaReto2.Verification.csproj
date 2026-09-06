@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\active\Bib_Hacienda\Bib_Hacienda\Bib_Hacienda.csproj" />
+    <ProjectReference Include="..\active\p_mvcHacienda\p_mvcHacienda.csproj" />
   </ItemGroup>
 
 </Project>

@@ -9,6 +9,7 @@ using Bib_Hacienda.Eventos;
 using Bib_Hacienda.enums;
 using Bib_Hacienda.Interfaces;
 using Bib_Hacienda.Reglas;
+using p_mvcHacienda.Servicios;
 using static Bib_Hacienda.Clases.Potrero;
 
 namespace HaciendaReto2.Verification
@@ -63,6 +64,9 @@ namespace HaciendaReto2.Verification
             SuscripcionNoCreceConLasLlamadas();
             CapturaConservaElOrdenDeEmision();
             CapturaAislaOperacionesEntreSi();
+
+            // --- P-07: Adapter de inventario ---
+            VentaDeResUsaElAdapter();
 
             // --- SC-3: historia clinica ---
             ResTieneHistoriaClinicaInicializada();
@@ -629,6 +633,22 @@ namespace HaciendaReto2.Verification
                     () => recolector.Capturar(),
                     "no se pueden abrir dos capturas a la vez");
             }
+        }
+
+        private static void VentaDeResUsaElAdapter()
+        {
+            var hacienda = HaciendaConRes("A-V", l_tipos_potreros.ternero, "Adaptada", 6, 200);
+            var potrero = hacienda.buscar_potrero("A-V");
+            var res = potrero.buscar_res("Adaptada");
+
+            AssertEqual(
+                "Venta de 'Adaptada' realizada con éxito.",
+                hacienda.vender(new InventarioPotrero(potrero), res, 1200),
+                "el Adapter permite vender una res por el flujo genérico de productos");
+            AssertEqual(0, potrero.L_reses.Count,
+                "el Adapter retira la res del potrero después de la venta");
+            AssertEqual(1, hacienda.L_ventas.Count,
+                "la venta adaptada queda registrada en Hacienda");
         }
 
         // ------------------------------------------------------------------

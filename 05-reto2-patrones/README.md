@@ -40,8 +40,15 @@ El codigo proviene de `p_mvcHacienda.zip` (SHA-256 `e3c45306a94f5473b4bab353265e
 - Factory Method
 - Builder
 - Observer
+- Adapter
 
 Facade fue descartado como patrón nuevo en A2: `Hacienda` ya coordina parte del flujo y otra fachada duplicaría ese rol.
+
+## Verificacion
+
+- [Matriz SOLID](04-verificacion/MATRIZ-SOLID-PATRONES.md)
+- [Evidencia de comportamiento](04-verificacion/EVIDENCIA-COMPORTAMIENTO.md)
+- [Registro de riesgos](05-riesgos/REGISTRO-RIESGOS.md)
 
 ## SC-3 implementada
 

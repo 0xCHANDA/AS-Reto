@@ -1,37 +1,74 @@
-# Actividad 3 - UML QA
+# Actividad 3 — Control de calidad del diagrama
 
-## Baseline y fuentes
+Registro de cómo se verificó `diagramas/A3-ASIS-TOBE-LAYERED.drawio`, por si en la sustentación preguntan de dónde salió cada caja.
 
-- HEAD: `c56b193924a799345004fa88b7cb97c5c2d1c1b6` en `main`.
-- Código observado: `04-src/baseline-input-2026-08-31/` (solo lectura). La evolución actual vive en `04-src/active/`.
-- Decisiones: `A1_Puntos_de_Dolor.md`, `A2_Decision_de_Patrones.md`, `README.md`.
-- Históricos: solo contexto; no se usaron como plantilla.
+## Fuentes
 
-## Decisiones materializadas
+| Capa | Código observado |
+|---|---|
+| AS-IS | `03-src/redisenado/HaciendaNEW/` |
+| TO-BE | `05-reto2-patrones/04-src/active/` |
 
-- Factory Method para P-01: `Potrero` es Client; `ICreadorRes` Creator; tres creadores concretos construyen `Ternero`, `Cebon` y `Novillo`; `Program` es el composition root.
-- Builder para P-04: `IConstructorVacuna` es Builder y `FabricadorVacunas` es ConcreteBuilder; `Vacuna` es Product. El cliente conserva construcción individual/lote con el tipo configurado.
-- Observer para P-03: publishers existentes son Subjects; `IObservadorMensaje` es Observer; `RecolectorMensajes` es ConcreteObserver; `Program` suscribe una sola vez.
-- Facade: descartado por A2; no representado como adoptado.
-- Solicitud de cambio: este diagrama conserva el estado anterior a SC-3; la implementación posterior no se representa retrospectivamente aquí.
+La carpeta `04-src/baseline-input-2026-08-31/` **no** es el AS-IS, aunque su nombre lo sugiera: ya trae Factory Method, Builder y Observer aplicados.
 
-## Conteo y relaciones
+Decisiones que materializa el diagrama: `A1_Puntos_de_Dolor.md` y `A2_Decision_de_Patrones.md`.
 
-- AS-IS: 17 nodos UML principales, 3 marcadores SALE y grupos visuales.
-- TO-BE: 8 participantes nuevos y overlays de rol.
-- Relaciones: generalización `Res`/subtipos y `Vacuna`/subtipos; realization para interfaces; dependencias de creación, construcción y notificación. No se declararon multiplicidades sin evidencia.
+## Roles representados
 
-## QA de render
+| Patrón | Quién hace qué |
+|---|---|
+| Factory Method | `ICreadorRes` es Creator; `CreadorTernero`, `CreadorCebon` y `CreadorNovillo` son ConcreteCreator; `CatalogoCreadoresRes` es el registro que resuelve por edad. Los clientes son `Hacienda.anadir_res_potrero` y `PersistenciaService` |
+| Builder | `IVacunaBuilder` es Builder; `BuilderBacteriana` y `BuilderViva` son ConcreteBuilder; `FabricadorVacunas` es el **Director**; `Vacuna` es Product |
+| Observer | Los publishers son Subject; `IObservadorMensaje` es Observer; `RecolectorMensajes` es ConcreteObserver. La suscripción ocurre en el constructor de `Hacienda`, líneas 84-86, no en `Program` |
+| Adapter | `IInventario<Producto>` es Target; `Potrero` es Adaptee; `InventarioPotrero` es Adapter; `ResService` es el cliente |
 
-- Exportaciones inspeccionadas: AS-IS y TO-BE en PNG y SVG desde la misma página/canvas.
-- XML: 0 errores con `drawio-skill/scripts/validate.py`.
-- Advertencias restantes del validador: solo 21 solapamientos entre cada grupo visual de fondo y sus elementos contenidos; son contención visual intencional, no nodos UML superpuestos.
-- Clipping, texto superpuesto, cruces y aristas a través de nodos: no observados en el render final.
-- Tipografía y contraste: legibles en el canvas completo y distinguibles en escala de grises por borde, etiqueta y tipo de trazo.
-- Proyección: los nombres y roles principales se mantienen legibles en la exportación de 2000 px; los detalles quedan como apoyo, no como única evidencia.
-- Paper-onion: los nodos conservados no cambian coordenadas entre exportaciones; solo aparece/desaparece el delta TO-BE.
+Facade quedó descartado en A2 y no se representa. SC-3 sí está en el diagrama: `HistoriaClinica`, `EventoClinico` e `IPersistenciaEventosClinicos`, en morado y sin patrón asociado.
 
-## Riesgos deliberadamente no resueltos
+## Conteo
 
-- La implementación de patrones y SC-3 existe en `04-src/active/`; este QA no reemplaza su verificación ejecutable.
-- El baseline sigue sin modificarse y su build actual pasa con advertencias.
+| | Cajas |
+|---|---|
+| Capa AS-IS | 22 |
+| Capa TO-BE | 17 |
+| Total de clases representadas | 39 |
+| Aristas | 39 |
+
+`FabricadorVacunas` aparece dos veces a propósito, una por capa: en rojo con las dos copias de `CrearLote`, y en verde como Director. Es el caso más claro de "se transforma" y separarlo deja ver qué salió y qué entró.
+
+## Verificación automática
+
+Se corren dos scripts sobre el `.drawio`, y los dos tienen que dar cero antes de exportar.
+
+**Trazado.** Ninguna línea cruza una caja, cada conexión tiene su propio puerto, ninguna arista comparte tramo con otra y todas llevan ruta explícita.
+
+```text
+39 aristas · 41 cajas · 0 cruce sobre caja · 0 puerto compartido
+                        0 líneas montadas · 0 ruta indefinida
+```
+
+Las 41 cajas del contador incluyen el título y la leyenda, que también actúan como obstáculo para el enrutado.
+
+**Correspondencia con el código.** Cada título de caja tiene que existir como `class`, `interface` o `enum` en la capa que le toca, y cada referencia `Archivo.cs:NNN` tiene que apuntar a la línea que dice. El script imprime el contenido real de cada línea para poder contrastarlo.
+
+```text
+39 cajas · 17 referencias de línea · 0 fallos
+```
+
+Esta segunda comprobación destapó dos errores que habían pasado inadvertidos: una caja `Hacienda` en la capa AS-IS que citaba una línea del TO-BE, y cuatro referencias escritas como `:23` sin decir de qué archivo, que se leían como líneas de la propia clase. Ambos corregidos.
+
+**Superposición de capas.** Como el TO-BE se enciende encima del AS-IS, se comprueba aparte que ninguna caja nueva tape una línea vieja:
+
+```text
+aristas de una capa sobre cajas de la otra: 0
+cajas del TO-BE encima de cajas del AS-IS:  0
+```
+
+Sale gratis porque el enrutador trata las cajas de las dos capas como obstáculo para las aristas de las dos capas.
+
+## Revisión visual
+
+Lo que ningún script juzga se revisó a ojo sobre el PNG exportado: texto que se desborde de su caja, etiquetas encima de otra cosa, leyenda incompleta, y que se pueda seguir cada línea de un extremo al otro sin perderla. Los nodos conservados no cambian de coordenadas entre las dos exportaciones; apagando la capa TO-BE solo desaparece lo que entra.
+
+## Lo que este control no cubre
+
+Que el diagrama corresponda al código no demuestra que el código se comporte igual que antes. Eso se verifica aparte, en `04-verificacion/EVIDENCIA-COMPORTAMIENTO.md`, donde hay tres diferencias declaradas.

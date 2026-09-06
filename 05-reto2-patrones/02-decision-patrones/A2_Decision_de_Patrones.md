@@ -1,84 +1,90 @@
-# Actividad 2 — Decisión de patrones a incorporar
-
-Evaluamos alternativas creacionales, estructurales y de comportamiento frente a los puntos de dolor identificados y al código actual. No partimos de la idea de aplicar un patrón por cada problema: solo adoptamos los que justifican la complejidad que agregan.
-
-Las decisiones se apoyan especialmente en la creación de reses y vacunas, y en el manejo de eventos. Los demás casos se mantienen sin un patrón nuevo cuando la solución existente, una corrección localizada o la deuda pendiente resultan más razonables.
-
----
+# Actividad 2.1 — Decisión de patrones
 
 ## 1. Tabla de decisión
 
-| Patrón evaluado | Familia | Punto de dolor | Qué gana y qué cuesta | Decisión | Por qué |
-|---|---|---|---|---|---|
-| Factory Method | Creacional | P-01: creación de reses distribuida | Concentraría la creación por subtipo; agrega creadores y una indirección. | Adoptado | `Hacienda` y persistencia conocen clases concretas. Lo adoptamos para retirar esa decisión de los clientes sin devolverla a `Potrero`. |
-| Abstract Factory | Creacional | P-01 | Podría coordinar familias; agrega interfaces y fábricas sin una familia real. | Descartado | `Res` y `Vacuna` son jerarquías independientes. No hay variantes que deban crearse juntas y mantenerse compatibles. |
-| Builder | Creacional | P-04: construcción de vacunas | Ordena datos comunes y específicos; añade objetos de construcción y pasos explícitos. | Adoptado | Las sobrecargas, la creación de lotes y la selección de variante están repartidas. Builders concretos atacan ese problema sin ocultarlo en condicionales. |
-| Prototype | Creacional | P-04 | Simplificaría la repetición de lotes; introduce clonación y no resuelve los contratos. | Descartado | Parece útil para `CrearLote`, pero solo cubre una parte del problema. Builder abarca también la construcción por variante. |
-| Singleton | Creacional | P-03 | Daría acceso global; aumenta acoplamiento y estado compartido. | Descartado | `Hacienda` ya tiene vida singleton por DI. No nos compensa trasladar esa decisión al dominio con un `Hacienda.Instance`. |
-| Facade | Estructural | P-07: coordinación entre componentes | Una fachada ordenaría accesos; otra capa duplicaría una coordinación existente. | Descartado | `Hacienda` ya actúa parcialmente como coordinador y el código lo describe así. No consideramos válido contar esa estructura previa como una incorporación nueva. |
-| Adapter | Estructural | P-07 | Podría unificar ventas; conservar dos contratos distintos seguiría requiriendo decisiones. | Descartado | Los contratos de venta siguen siendo distintos. No queremos institucionalizar esa divergencia mediante un adaptador. |
-| Decorator | Estructural | P-06: autorización desconectada | Encapsularía permisos; activarlos ahora cambiaría operaciones que hoy pasan. | Descartado | La autorización no está integrada. El patrón no resuelve la decisión pendiente de empezar a denegar acciones. |
-| Proxy | Estructural | P-06 | Añadiría control de acceso; duplicaría una técnica ya presente. | Descartado | `Program.cs` ya usa `Castle.DynamicProxy` para validadores. No es una incorporación nueva ni ataca el problema de autorización. |
-| Observer | Comportamiento | P-03: suscripciones acumulables | Formaliza suscriptores y ciclo de vida; exige conservar el orden de avisos. | Adoptado | Ya existen publishers y eventos, pero hay suscripciones `+=` dentro de operaciones. Con `Hacienda` de vida larga, esos handlers pueden acumularse. |
-| Strategy | Comportamiento | P-02: reglas por tipo de res | Extraería políticas; suma interfaz, estrategias y configuración. | Descartado | La variación depende del subtipo de `Res`, que ya se representa con herencia. Preferimos usar ese polimorfismo. |
-| Visitor | Comportamiento | P-05: cruces entre `Res` y `Vacuna` | Facilita nuevas operaciones; encarece nuevos tipos de elemento. | Descartado | Podría servir para operaciones cruzadas, pero el dolor actual es añadir tipos. Optimiza el eje contrario. |
-| Chain of Responsibility | Comportamiento | P-06 | Ordenaría validaciones de autorización; introduce una cadena para un control inactivo. | Descartado | La misma barrera de Decorator aplica aquí: conectar permisos cambiaría el comportamiento actual. |
-| Template Method | Comportamiento | P-04 | Compartiría una secuencia de construcción; fuerza pasos comunes débiles. | Descartado | Bacteriana y Viva no siguen una secuencia suficientemente uniforme. Builder mantiene las validaciones en cada variante. |
+| Patrón                  | Familia        | Punto de dolor | Qué gana y qué cuesta                                                                                             | Decisión   | Por qué                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------- | -------------- | -------------- | ----------------------------------------------------------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Factory Method          | Creacional     | P-01           | Saca la elección del subtipo de los clientes. Cuesta una interfaz, tres creadores y un registro.                  | Adoptado   | `Potrero.anadir_res` traduce el enum a un string (`:53`) y después hace un switch sobre ese texto (`:90`). `PersistenciaService` repite la decisión en `:512-526` y `:571-574`. Son cuatro sitios que hay que sincronizar a mano.                                                                                                       |
+| Abstract Factory        | Creacional     | P-01           | Coordinaría familias de productos. Cuesta una interfaz de fábrica más por familia.                                | Descartado | `Res` y `Vacuna` varían por separado. No existe la regla "un Ternero solo admite la vacuna X de la misma familia", así que la fábrica abstracta protegería una restricción que el dominio no tiene. El propio enunciado advierte que con una sola familia no se justifica.                                                              |
+| Builder                 | Creacional     | P-04           | Separa la secuencia común de lo que cambia por variante. Cuesta una interfaz de builder y una clase por variante. | Adoptado   | `CrearLote` está escrito dos veces (`FabricadorVacunas.cs:60` y `:98`), idéntico salvo el `new` y el texto. La copia bacteriana arrastra un `$` faltante en `:86` que la viva no tiene. Duplicar el cuerpo ya produjo un defecto real.                                                                                                  |
+| Prototype               | Creacional     | P-04           | Clonaría la vacuna base del lote. Cuesta un contrato de clonación y decidir la profundidad de la copia.           | Descartado | Resuelve solo el bucle del lote. Deja intactas las cuatro firmas del contrato y la selección de variante en `VacunaService`, que son las otras dos terceras partes de P-04. Builder cubre las tres.                                                                                                                                     |
+| Singleton               | Creacional     | P-03           | Daría un punto de acceso único a `Hacienda`. Cuesta estado global y testabilidad.                                 | Descartado | `Hacienda` ya vive como singleton, pero por `AddSingleton` en la raíz de composición, que es una decisión de la aplicación y se puede cambiar sin tocar el dominio. Un `Hacienda.Instance` metería esa decisión dentro del dominio y ningún consumidor podría sustituirla en una prueba.                                                |
+| Adapter                 | Estructural    | P-07           | Deja que el camino genérico de venta acepte un potrero. Cuesta una clase de traducción y la conversión de tipo.   | Adoptado   | `Hacienda.vender` pide `IInventario<Producto>` y `Potrero` implementa `IInventario<Res>`. Como `IInventario<T>` es invariante, el compilador no acepta el segundo donde se espera el primero. Sin adaptador quedan dos caminos de venta y hay que mantener los dos.                                                                     |
+| Facade                  | Estructural    | P-07           | Una entrada única a la coordinación. Cuesta una capa más y el riesgo de absorber lógica.                          | Descartado | `Hacienda` ya hace ese papel: `anadir_res_potrero` (`:125`) solo busca el potrero y delega. Añadir otra fachada duplicaría el rol, y presentar la que ya existe como incorporación nuestra sería atribuirnos una estructura del Reto 1. El enunciado además avisa de que Facade tiende a romper SRP absorbiendo negocio.                |
+| Decorator               | Estructural    | P-06           | Envolvería cada operación con su chequeo de permisos. Cuesta un decorador por operación.                          | Descartado | Activar permisos hoy haría fallar operaciones que hoy pasan, y eso es un cambio de comportamiento observable no autorizado: 0.5 sobre la nota final por caso. El patrón no resuelve la decisión de fondo, que es si el negocio quiere empezar a denegar acciones.                                                                       |
+| Proxy                   | Estructural    | P-06           | Intercepta llamadas para autorizar. Cuesta una capa de intercepción.                                              | Descartado | Ya está la técnica en el proyecto: `p_mvcHacienda/Program.cs:41-49` usa `Castle.DynamicProxy` para envolver los validadores. Presentarlo como patrón nuevo sería contar algo que ya estaba, y choca con la misma barrera de comportamiento que Decorator.                                                                               |
+| Observer                | Comportamiento | P-03           | Fija quién escucha y por cuánto tiempo. Cuesta una interfaz de observador y un objeto que recolecta.              | Adoptado   | Hay siete `+=` dentro de cuerpos de método (`Potrero.cs:112,118,124,130` y `Hacienda.cs:225,231,294`) que nunca se sueltan. Con `Hacienda` como singleton, la llamada número 200 ejecuta 200 handlers.                                                                                                                                  |
+| Strategy                | Comportamiento | P-02           | Extrae las reglas por tipo a objetos. Cuesta una interfaz, tres estrategias y decidir quién las asigna.           | Descartado | La variación es por subtipo de `Res`, y la herencia ya la representa. `Res.cs:104-105` lo demuestra: `MaxVacunasBacterianas` es abstracta y cada subtipo responde. P-02 no es que falte un mecanismo, es que tres publishers no usaron el que ya existía. Se arregla subiendo esas reglas a `Res`, no añadiendo una jerarquía paralela. |
+| Template Method         | Comportamiento | P-04           | Fija la secuencia en una clase base y deja huecos a las subclases. Cuesta herencia obligatoria.                   | Descartado | La secuencia de lote y la individual comparten poco: la de lote numera, omite duplicados y cuenta. Forzar una plantilla común dejaría pasos vacíos en una de las dos ramas, que es justo el error de LSP que el enunciado nombra. Builder consigue lo mismo por composición.                                                            |
+| Visitor                 | Comportamiento | P-05           | Abarata añadir operaciones sobre la jerarquía. Encarece añadir tipos.                                             | Descartado | Optimiza el eje contrario al que duele. P-05 es caro precisamente cuando se agrega un tipo nuevo de vacuna, y Visitor obliga a tocar todos los visitantes cada vez que aparece un elemento nuevo.                                                                                                                                       |
+| Chain of Responsibility | Comportamiento | P-06           | Encadena chequeos de autorización. Cuesta la cadena y su orden.                                                   | Descartado | Mismo bloqueo que Decorator y Proxy: conectar la autorización cambia comportamiento observable. Además, la cadena resuelve el orden de varios chequeos, y aquí no hay varios chequeos, hay uno que nadie ejecuta.                                                                                                                       |
 
-## 2. Patrones adoptados
+Catorce evaluados: cinco creacionales, cuatro estructurales, cinco de comportamiento. Cuatro adoptados, diez descartados.
 
-### Factory Method
+## 2. Los cuatro adoptados
 
-Al revisar el código actual vimos que `Hacienda.anadir_res_potrero` decide entre `Ternero`, `Cebon` y `Novillo` según la edad. `PersistenciaService` también contiene conocimiento de subtipos concretos al reconstruir objetos. En cambio, `Potrero.agregar` recibe una `Res` ya creada, por lo que no debe recuperar la responsabilidad de construirla.
+### Factory Method — P-01
 
-Lo adoptamos porque concentra la creación por subtipo fuera de los clientes que hoy conocen las clases concretas. La futura implementación deberá mantener esa responsabilidad en creadores concretos y conservar el comportamiento de persistencia, incluidos sus casos de respaldo, sin cambiarlos de forma silenciosa.
+En el AS-IS, dar de alta una res pasa por dos switches encadenados dentro de `Potrero.anadir_res`, y la misma decisión se repite dos veces más en `PersistenciaService`. El de recarga termina en `_ => new Ternero(...)`, así que un tipo desconocido guardado en disco vuelve convertido en ternero sin avisar.
 
-El costo es un nivel adicional de indirección y más clases que leer. Aun así, preferimos ese costo a repetir decisiones de construcción. No debe terminar en una fábrica con un `switch` gigante: eso solo trasladaría el mismo punto rígido.
+En el TO-BE la decisión desaparece. `ICreadorRes` declara `AplicaA(ushort edad)` y `CatalogoCreadoresRes` resuelve por capacidad, no por condicional:
 
-### Builder
+```csharp
+public ICreadorRes ParaEdad(ushort edad)
+{
+    ICreadorRes creador = creadores.FirstOrDefault(c => c.AplicaA(edad));
+    ...
+}
+```
 
-La creación de vacunas combina datos comunes con datos propios de `Bacteriana` y `Viva`. `FabricadorVacunas` expone cuatro sobrecargas, dos de ellas para lotes con bucles casi iguales, y `ICreacionVacuna` publica esas variantes. `VacunaService` vuelve a decidir el tipo a partir de parámetros opcionales.
+Una categoría nueva se registra y ya. Ningún cliente cambia.
 
-Builder encaja porque separa los pasos comunes de la construcción específica y permite representarlos con builders concretos por variante. Un coordinador reutilizable, como `FabricadorVacunas` si el diseño final lo confirma, podría dirigir el proceso sin decidir qué subtipo crear mediante condiciones internas.
+Lo que cuesta: cuatro clases nuevas y un salto de indirección. Quien lee `ParaEdad` no ve qué subtipo sale, tiene que ir al creador. Aceptamos ese costo porque el alternativo es mantener cuatro switches sincronizados a mano.
 
-El costo es hacer visibles nuevos contratos y pasos de construcción. La implementación deberá conservar los mensajes observables; el patrón no justifica corregirlos o reformularlos durante este cambio. Tampoco conviene crear un único `VacunaBuilder` lleno de `if` o `switch`, porque ocultaría la misma decisión distribuida que buscamos reducir.
+El riesgo conocido es terminar con una fábrica que crece con un `case` por tipo, que es el error que el enunciado nombra primero. Por eso el catálogo pregunta a cada creador si aplica en vez de decidir él.
 
-### Observer
+### Builder — P-04
 
-El sistema ya publica eventos para peso, ocupación de potrero y vacunación. El problema no es crear un sistema de eventos nuevo: en `Hacienda` las suscripciones se realizan dentro de operaciones como alimentar o aplicar una vacuna, y no se aprecia un ciclo de baja. Como `Hacienda` se registra como singleton, esos handlers pueden acumularse mientras el proceso sigue activo.
+`FabricadorVacunas` pasa a Director. Conoce la secuencia común, validar, construir, registrar y resumir, pero no qué variante se está creando. Cada variante vive en su `IVacunaBuilder`.
 
-Adoptamos Observer para declarar con claridad quién escucha cada publisher y controlar la vida de las suscripciones. Así el mecanismo deja de depender de lambdas locales creadas durante cada operación.
+Lo interesante del caso es el `$` faltante de la línea 86. Al unificar las dos copias había que decidir qué hacer con él, y la salida del sistema está congelada. La solución fue declararlo en el contrato del builder:
 
-La solución agregará abstracciones y exigirá documentar los suscriptores. También deberá conservar el orden observable de los mensajes emitidos, porque ese orden forma parte de la salida que reciben los servicios y las vistas.
+```csharp
+// Nombre tal como debe aparecer en el resumen de lote. Existe porque las
+// dos variantes no lo imprimen igual y ese texto es observable.
+string NombreEnResumenDeLote(string nombre);
+```
 
-## 3. Descartes principales
+El defecto se conserva a propósito, y ahora está documentado en vez de escondido en una copia.
 
-### Abstract Factory
+Lo que cuesta, y esto queda declarado como deuda: `ICreacionVacuna` sigue publicando cuatro firmas. Builder eliminó el cuerpo duplicado, no el contrato. Un tercer tipo de vacuna todavía obliga a tocar esa interfaz. Resolverlo entra en la deuda que dejamos por escrito, no en este trimestre.
 
-Lo descartamos porque no existen familias coordinadas de productos. Una res y una vacuna pueden variar de forma independiente; no necesitamos construir conjuntos como `Ternero` con una vacuna exclusiva compatible. La indirección adicional no protege una regla real del dominio.
+### Observer — P-03
 
-### Prototype
+Las siete suscripciones dentro de métodos se reducen a tres, y suben al constructor de `Hacienda`:
 
-Prototype parece razonable para repetir la creación de un lote. Sin embargo, solo ataca la clonación interna y deja intactos los contratos múltiples, la selección de variante y los puntos de construcción repartidos. Builder cubre mejor el conjunto de P-04.
+```csharp
+publisher_peso_min.evt_peso_min += recolectorMensajes.Recibir;
+publisher_peso_ideal.evt_peso_venta += recolectorMensajes.Recibir;
+publisher_vacunacion_completa.evt_vacunacion_completada += recolectorMensajes.Recibir;
+```
 
-### Singleton
+`RecolectorMensajes` es el único observador y solo guarda avisos mientras una operación tiene una captura abierta. Fuera de una captura los descarta, que es exactamente lo que pasaba antes cuando el publisher no tenía suscriptores. Así el orden de los mensajes se conserva y ninguna operación lee los de otra.
 
-`Program.cs` registra `Hacienda` con vida singleton, pero esa decisión está en la composición de la aplicación, no dentro del dominio. Preferimos mantenerla allí. Un `Hacienda.Instance` aumentaría el acoplamiento, introduciría estado global y dificultaría sustituir colaboradores en pruebas.
+Lo que cuesta: dos abstracciones nuevas y un mecanismo de captura que hay que entender antes de tocar un publisher. A cambio, quién escucha qué se lee en un solo sitio.
 
-### Facade
+### Adapter — P-07
 
-Facade queda descartado como patrón nuevo. Al revisar el código vimos que `Hacienda` ya cumple parcialmente el papel de punto de coordinación. Crear otra fachada duplicaría ese rol, y contar la existente como una incorporación nos atribuiría una estructura que ya estaba. Preferimos conservar y vigilar ese límite sin sumar una abstracción artificial.
+Este es el más pequeño y el que más discutimos, porque nació de un problema de compilación, no de diseño.
 
-### Strategy
+`Hacienda.vender` opera sobre `IInventario<Producto>`. `Potrero` implementa `IInventario<Res>`. En C# los genéricos son invariantes cuando el parámetro aparece en posición de entrada y de salida, y `IInventario<T>` tiene `agregar(T)` y `retirar(T)`, así que un `IInventario<Res>` no puede pasar por `IInventario<Producto>` aunque `Res` herede de `Producto`.
 
-Las reglas que varían lo hacen por subtipo de `Res`. La jerarquía ya representa esa variación y `Res` usa miembros abstractos para parte de sus reglas de vacunación. Agregar una interfaz de estrategias y asociarla a cada res no aporta una ventaja proporcional.
+Sin adaptador quedan dos caminos de venta vivos y hay que mantener los dos. `InventarioPotrero` traduce, y la venta de una res pasa por el mismo método genérico que cualquier otro producto:
 
-### Visitor
+```csharp
+string mensaje = _hacienda.vender(new InventarioPotrero(potrero), res, monto);
+```
 
-Visitor podría organizar operaciones que cruzan `Res` y `Vacuna`. Aun así, hace más barato agregar operaciones y más costoso agregar tipos, mientras que el problema actual aparece al incorporar nuevos subtipos. No nos compensa optimizar ese eje.
+Vive en `p_mvcHacienda/Servicios/`, no en la biblioteca. Esa ubicación es deliberada: la incompatibilidad es de tipos, no de negocio, y resolverla en el dominio habría obligado a cambiar `IInventario<T>`.
 
-## 4. Resultado
-
-Se evaluaron 14 patrones: 5 creacionales, 4 estructurales y 5 de comportamiento. Se adoptaron Factory Method, Builder y Observer; los otros 11 se descartaron. Con tres adopciones se cumple el rango exigido y se cubren al menos dos familias.
-
-La selección prioriza problemas concretos del código sobre acumular patrones. Cada patrón adoptado tiene un costo, pero ese costo se justifica por una decisión repetida de construcción o por un ciclo de vida de eventos que hoy no está claro.
+Lo que cuesta: la conversión de `Producto` a `Res` se verifica en tiempo de ejecución, no de compilación. Si alguien le pasa un lácteo, `InventarioPotrero` lanza. Es un chequeo que el compilador hacía antes por nosotros y ahora hacemos a mano.
