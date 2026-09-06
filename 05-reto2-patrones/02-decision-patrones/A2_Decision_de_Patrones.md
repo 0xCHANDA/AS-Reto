@@ -1,84 +1,46 @@
-# Actividad 2 — Decisión de patrones a incorporar
+# Actividad 2.1 — Decisión de patrones (V2 auditada)
 
-Evaluamos alternativas creacionales, estructurales y de comportamiento frente a los puntos de dolor identificados y al código actual. No partimos de la idea de aplicar un patrón por cada problema: solo adoptamos los que justifican la complejidad que agregan.
+Se contrastó el AS-IS de `03-src/redisenado/HaciendaNEW/` con `04-src/active/`, el verificador y el diseño canónico. Se adoptan **tres** patrones: Factory Method, Builder y Observer. SC-3 se implementa como composición de dominio, no como un cuarto patrón artificial.
 
-Las decisiones se apoyan especialmente en la creación de reses y vacunas, y en el manejo de eventos. Los demás casos se mantienen sin un patrón nuevo cuando la solución existente, una corrección localizada o la deuda pendiente resultan más razonables.
+| Patrón | Decisión | Evidencia resumida |
+|---|---|---|
+| Factory Method | Adoptado (P-01) | El AS-IS decide subtipos en `Potrero` y persistencia; el TO-BE usa creadores por edad. |
+| Abstract Factory | Descartado | No hay familias de `Res` y `Vacuna` que deban variar juntas. |
+| Builder | Adoptado (P-04) | El TO-BE centraliza creación individual y por lote, sin eliminar las cuatro firmas heredadas. |
+| Prototype | Descartado | Solo cubriría el bucle de lote; no resuelve la variación de construcción ni la deuda contractual. |
+| Singleton | Descartado | La vida singleton se decide en DI, no debe convertirse en estado global del dominio. |
+| Adapter | Descartado/corregido | El adaptador previo prometía `IInventario<Producto>` para un potrero que solo admite `Res`: vulneraba LSP. Se reemplazó por `vender<T>(IInventario<T>, T, ...)`. |
+| Facade | Descartado | `Hacienda` ya coordina; contarlo como incorporación sería incorrecto. |
+| Decorator | Descartado | Conectar autorización modificaría operaciones permitidas sin autorización funcional. |
+| Proxy | Descartado | La técnica de proxy ya existe para validadores y no resuelve la decisión de permisos. |
+| Observer | Adoptado (P-03) | El AS-IS ya tenía eventos; la intervención formaliza suscripción y ciclo de vida. |
+| Strategy | Descartado | La variación por tipo de res ya tiene soporte polimórfico parcial en `Res`. |
+| Template Method | Descartado | Lote e individual no comparten una secuencia lo bastante uniforme. |
+| Visitor | Descartado | Abarata operaciones, no la adición de tipos, que es el eje doloroso. |
+| Chain of Responsibility | Descartado | Misma barrera funcional de autorización que Decorator y Proxy. |
 
----
+## Factory Method — P-01
 
-## 1. Tabla de decisión
+Roles comprobados: `Res` es **Product**; `Ternero`, `Cebon` y `Novillo` son **Concrete Products**; `ICreadorRes` es el contrato **Creator**; `CreadorTernero`, `CreadorCebon` y `CreadorNovillo` son **Concrete Creators**. `CatalogoCreadoresRes` no es el Factory Method: es el registro/resolvedor que selecciona un creador por `AplicaA(edad)`.
 
-| Patrón evaluado | Familia | Punto de dolor | Qué gana y qué cuesta | Decisión | Por qué |
-|---|---|---|---|---|---|
-| Factory Method | Creacional | P-01: creación de reses distribuida | Concentraría la creación por subtipo; agrega creadores y una indirección. | Adoptado | `Hacienda` y persistencia conocen clases concretas. Lo adoptamos para retirar esa decisión de los clientes sin devolverla a `Potrero`. |
-| Abstract Factory | Creacional | P-01 | Podría coordinar familias; agrega interfaces y fábricas sin una familia real. | Descartado | `Res` y `Vacuna` son jerarquías independientes. No hay variantes que deban crearse juntas y mantenerse compatibles. |
-| Builder | Creacional | P-04: construcción de vacunas | Ordena datos comunes y específicos; añade objetos de construcción y pasos explícitos. | Adoptado | Las sobrecargas, la creación de lotes y la selección de variante están repartidas. Builders concretos atacan ese problema sin ocultarlo en condicionales. |
-| Prototype | Creacional | P-04 | Simplificaría la repetición de lotes; introduce clonación y no resuelve los contratos. | Descartado | Parece útil para `CrearLote`, pero solo cubre una parte del problema. Builder abarca también la construcción por variante. |
-| Singleton | Creacional | P-03 | Daría acceso global; aumenta acoplamiento y estado compartido. | Descartado | `Hacienda` ya tiene vida singleton por DI. No nos compensa trasladar esa decisión al dominio con un `Hacienda.Instance`. |
-| Facade | Estructural | P-07: coordinación entre componentes | Una fachada ordenaría accesos; otra capa duplicaría una coordinación existente. | Descartado | `Hacienda` ya actúa parcialmente como coordinador y el código lo describe así. No consideramos válido contar esa estructura previa como una incorporación nueva. |
-| Adapter | Estructural | P-07 | Podría unificar ventas; conservar dos contratos distintos seguiría requiriendo decisiones. | Descartado | Los contratos de venta siguen siendo distintos. No queremos institucionalizar esa divergencia mediante un adaptador. |
-| Decorator | Estructural | P-06: autorización desconectada | Encapsularía permisos; activarlos ahora cambiaría operaciones que hoy pasan. | Descartado | La autorización no está integrada. El patrón no resuelve la decisión pendiente de empezar a denegar acciones. |
-| Proxy | Estructural | P-06 | Añadiría control de acceso; duplicaría una técnica ya presente. | Descartado | `Program.cs` ya usa `Castle.DynamicProxy` para validadores. No es una incorporación nueva ni ataca el problema de autorización. |
-| Observer | Comportamiento | P-03: suscripciones acumulables | Formaliza suscriptores y ciclo de vida; exige conservar el orden de avisos. | Adoptado | Ya existen publishers y eventos, pero hay suscripciones `+=` dentro de operaciones. Con `Hacienda` de vida larga, esos handlers pueden acumularse. |
-| Strategy | Comportamiento | P-02: reglas por tipo de res | Extraería políticas; suma interfaz, estrategias y configuración. | Descartado | La variación depende del subtipo de `Res`, que ya se representa con herencia. Preferimos usar ese polimorfismo. |
-| Visitor | Comportamiento | P-05: cruces entre `Res` y `Vacuna` | Facilita nuevas operaciones; encarece nuevos tipos de elemento. | Descartado | Podría servir para operaciones cruzadas, pero el dolor actual es añadir tipos. Optimiza el eje contrario. |
-| Chain of Responsibility | Comportamiento | P-06 | Ordenaría validaciones de autorización; introduce una cadena para un control inactivo. | Descartado | La misma barrera de Decorator aplica aquí: conectar permisos cambiaría el comportamiento actual. |
-| Template Method | Comportamiento | P-04 | Compartiría una secuencia de construcción; fuerza pasos comunes débiles. | Descartado | Bacteriana y Viva no siguen una secuencia suficientemente uniforme. Builder mantiene las validaciones en cada variante. |
+Así, `Hacienda.anadir_res_potrero` deja de decidir el subtipo y solo pide `catalogoCreadoresRes.ParaEdad(edad).Crear(...)`. Añadir categoría exige implementar/registrar un creador y revisar las decisiones que aún viven en persistencia o UI; no se afirma OCP absoluto. El costo es una indirección adicional y una lectura más larga del flujo.
 
-## 2. Patrones adoptados
+## Builder — P-04
 
-### Factory Method
+`FabricadorVacunas` es el Director: centraliza validar, construir, registrar, numerar y resumir. `BuilderBacteriana` y `BuilderViva` encapsulan la construcción particular. Esto elimina la duplicación del proceso y centraliza la variación, **pero no elimina la explosión contractual**: `ICreacionVacuna` aún conserva cuatro firmas públicas. Un tercer tipo de vacuna requerirá cambios adicionales; esa deuda queda explícita y Prototype tampoco la resuelve.
 
-Al revisar el código actual vimos que `Hacienda.anadir_res_potrero` decide entre `Ternero`, `Cebon` y `Novillo` según la edad. `PersistenciaService` también contiene conocimiento de subtipos concretos al reconstruir objetos. En cambio, `Potrero.agregar` recibe una `Res` ya creada, por lo que no debe recuperar la responsabilidad de construirla.
+`IVacunaBuilder.NombreEnResumenDeLote(...)` es un *seam* de compatibilidad, no una responsabilidad ideal de un builder. Conserva el `$` faltante del resumen bacteriano para no alterar salida observable; por eso el builder conoce una particularidad de formato. Es deuda consciente y retirarla requiere autorización para cambiar el comportamiento.
 
-Lo adoptamos porque concentra la creación por subtipo fuera de los clientes que hoy conocen las clases concretas. La futura implementación deberá mantener esa responsabilidad en creadores concretos y conservar el comportamiento de persistencia, incluidos sus casos de respaldo, sin cambiarlos de forma silenciosa.
+## Observer — P-03
 
-El costo es un nivel adicional de indirección y más clases que leer. Aun así, preferimos ese costo a repetir decisiones de construcción. No debe terminar en una fábrica con un `switch` gigante: eso solo trasladaría el mismo punto rígido.
+Observer no nació en Reto 2: el AS-IS ya tenía publishers, eventos y suscripciones `+=`. El problema era su ciclo de vida. En el TO-BE, `Hacienda` se suscribe una vez en el constructor a `RecolectorMensajes`; `CapturaMensajes` delimita los avisos de cada operación. Esto evita acumulación de handlers y mezcla entre operaciones, conservando el orden de mensajes caracterizado.
 
-### Builder
+## Corrección LSP de la venta
 
-La creación de vacunas combina datos comunes con datos propios de `Bacteriana` y `Viva`. `FabricadorVacunas` expone cuatro sobrecargas, dos de ellas para lotes con bucles casi iguales, y `ICreacionVacuna` publica esas variantes. `VacunaService` vuelve a decidir el tipo a partir de parámetros opcionales.
+La firma anterior `vender(IInventario<Producto>, Producto, ...)` permitía a cualquier cliente pasar un producto válido para el contrato. `InventarioPotrero` reforzaba esa precondición: `agregar` y `retirar` lanzaban cuando el producto no era `Res`. Que el único cliente actual pasara una res no vuelve sustituible el adaptador; el contrato público seguía siendo más amplio.
 
-Builder encaja porque separa los pasos comunes de la construcción específica y permite representarlos con builders concretos por variante. Un coordinador reutilizable, como `FabricadorVacunas` si el diseño final lo confirma, podría dirigir el proceso sin decidir qué subtipo crear mediante condiciones internas.
+La alternativa mínima es type-safe: `IVenta.vender<T>(IInventario<T>, T, uint) where T : Producto`. `ResService` pasa `Potrero` y `Res` con el mismo `T`; los inventarios de derivados también preservan su propio tipo. Se retira el Adapter y no se cuenta esta corrección de tipos como patrón adoptado. El mensaje y la venta observable permanecen iguales.
 
-El costo es hacer visibles nuevos contratos y pasos de construcción. La implementación deberá conservar los mensajes observables; el patrón no justifica corregirlos o reformularlos durante este cambio. Tampoco conviene crear un único `VacunaBuilder` lleno de `if` o `switch`, porque ocultaría la misma decisión distribuida que buscamos reducir.
+## SC-3 y coherencia documental
 
-### Observer
-
-El sistema ya publica eventos para peso, ocupación de potrero y vacunación. El problema no es crear un sistema de eventos nuevo: en `Hacienda` las suscripciones se realizan dentro de operaciones como alimentar o aplicar una vacuna, y no se aprecia un ciclo de baja. Como `Hacienda` se registra como singleton, esos handlers pueden acumularse mientras el proceso sigue activo.
-
-Adoptamos Observer para declarar con claridad quién escucha cada publisher y controlar la vida de las suscripciones. Así el mecanismo deja de depender de lambdas locales creadas durante cada operación.
-
-La solución agregará abstracciones y exigirá documentar los suscriptores. También deberá conservar el orden observable de los mensajes emitidos, porque ese orden forma parte de la salida que reciben los servicios y las vistas.
-
-## 3. Descartes principales
-
-### Abstract Factory
-
-Lo descartamos porque no existen familias coordinadas de productos. Una res y una vacuna pueden variar de forma independiente; no necesitamos construir conjuntos como `Ternero` con una vacuna exclusiva compatible. La indirección adicional no protege una regla real del dominio.
-
-### Prototype
-
-Prototype parece razonable para repetir la creación de un lote. Sin embargo, solo ataca la clonación interna y deja intactos los contratos múltiples, la selección de variante y los puntos de construcción repartidos. Builder cubre mejor el conjunto de P-04.
-
-### Singleton
-
-`Program.cs` registra `Hacienda` con vida singleton, pero esa decisión está en la composición de la aplicación, no dentro del dominio. Preferimos mantenerla allí. Un `Hacienda.Instance` aumentaría el acoplamiento, introduciría estado global y dificultaría sustituir colaboradores en pruebas.
-
-### Facade
-
-Facade queda descartado como patrón nuevo. Al revisar el código vimos que `Hacienda` ya cumple parcialmente el papel de punto de coordinación. Crear otra fachada duplicaría ese rol, y contar la existente como una incorporación nos atribuiría una estructura que ya estaba. Preferimos conservar y vigilar ese límite sin sumar una abstracción artificial.
-
-### Strategy
-
-Las reglas que varían lo hacen por subtipo de `Res`. La jerarquía ya representa esa variación y `Res` usa miembros abstractos para parte de sus reglas de vacunación. Agregar una interfaz de estrategias y asociarla a cada res no aporta una ventaja proporcional.
-
-### Visitor
-
-Visitor podría organizar operaciones que cruzan `Res` y `Vacuna`. Aun así, hace más barato agregar operaciones y más costoso agregar tipos, mientras que el problema actual aparece al incorporar nuevos subtipos. No nos compensa optimizar ese eje.
-
-## 4. Resultado
-
-Se evaluaron 14 patrones: 5 creacionales, 4 estructurales y 5 de comportamiento. Se adoptaron Factory Method, Builder y Observer; los otros 11 se descartaron. Con tres adopciones se cumple el rango exigido y se cubren al menos dos familias.
-
-La selección prioriza problemas concretos del código sobre acumular patrones. Cada patrón adoptado tiene un costo, pero ese costo se justifica por una decisión repetida de construcción o por un ciclo de vida de eventos que hoy no está claro.
+SC-3 agrega `HistoriaClinica` a cada `Res`, con `VacunasAplicadas` y `EventosClinicos` separados. Aplicar vacuna no duplica el hecho como evento. No se vincula falsamente con P-04/P-05: ampliar una historia clínica no exige crear clases de vacuna. El diagrama A3 es histórico y declara que no representa retrospectivamente SC-3; la fuente activa y `HaciendaReto2.Verification` son la evidencia vigente.

@@ -15,7 +15,7 @@ namespace Bib_Hacienda.Clases
     // - Vender -> se hace via RegistroVenta
     // - Crear vacunas -> se hace via FabricadorVacunas
     // - Aplicar vacunas -> sigue aquí (orquesta Potrero + Res + eventos)
-    public class Hacienda : IVacunacion, IVenta<Producto>, ICreacionVacuna
+    public class Hacienda : IVacunacion, IVenta, ICreacionVacuna
     {
         //Atributos
         private List<Potrero> l_potreros;
@@ -188,7 +188,8 @@ namespace Bib_Hacienda.Clases
         }
 
         //metodo para vender
-        public string vender(IInventario<Producto> inventario, Producto producto, uint monto)
+        public string vender<T>(IInventario<T> inventario, T producto, uint monto)
+            where T : Producto
         { 
             if (inventario == null)
                 throw new ArgumentNullException(nameof(inventario));
@@ -200,7 +201,7 @@ namespace Bib_Hacienda.Clases
                 throw new InvalidOperationException(
                     $"El producto '{producto.Nombre}' no se encuentra en el inventario.");
 
-            Producto productoRetirado = inventario.retirar(producto);
+            T productoRetirado = inventario.retirar(producto);
 
             Venta venta = new Venta(
                 DateTime.Now,

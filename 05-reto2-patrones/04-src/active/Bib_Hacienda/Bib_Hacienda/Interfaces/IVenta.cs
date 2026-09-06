@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace Bib_Hacienda.Interfaces
 {
-    public interface IVenta<T> where T : Producto 
+    public interface IVenta
     {
-        //Metodo para vender res
-        string vender(IInventario<T> inventario, T producto, uint monto);
+        // El inventario y el producto deben ser del mismo tipo concreto. Asi no
+        // se promete que un potrero acepte cualquier Producto.
+        string vender<T>(IInventario<T> inventario, T producto, uint monto)
+            where T : Producto;
     }
 }
