@@ -65,8 +65,8 @@ namespace HaciendaReto2.Verification
             CapturaConservaElOrdenDeEmision();
             CapturaAislaOperacionesEntreSi();
 
-            // --- P-07: Adapter de inventario ---
-            VentaDeResUsaElAdapter();
+            // --- Venta genérica type-safe ---
+            VentaDeResUsaElVenderGenerico();
 
             // --- SC-3: historia clinica ---
             ResTieneHistoriaClinicaInicializada();
@@ -635,7 +635,7 @@ namespace HaciendaReto2.Verification
             }
         }
 
-        private static void VentaDeResUsaElAdapter()
+        private static void VentaDeResUsaElVenderGenerico()
         {
             var hacienda = HaciendaConRes("A-V", l_tipos_potreros.ternero, "Adaptada", 6, 200);
             var potrero = hacienda.buscar_potrero("A-V");
@@ -643,12 +643,12 @@ namespace HaciendaReto2.Verification
 
             AssertEqual(
                 "Venta de 'Adaptada' realizada con éxito.",
-                hacienda.vender(new InventarioPotrero(potrero), res, 1200),
-                "el Adapter permite vender una res por el flujo genérico de productos");
+                hacienda.vender(potrero, res, 1200),
+                "vender<T> liga la res con su inventario por tipo genérico");
             AssertEqual(0, potrero.L_reses.Count,
-                "el Adapter retira la res del potrero después de la venta");
+                "la venta genérica retira la res del potrero después de la venta");
             AssertEqual(1, hacienda.L_ventas.Count,
-                "la venta adaptada queda registrada en Hacienda");
+                "la venta genérica queda registrada en Hacienda");
         }
 
         // ------------------------------------------------------------------

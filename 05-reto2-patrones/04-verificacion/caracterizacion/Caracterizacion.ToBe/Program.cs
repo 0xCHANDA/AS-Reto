@@ -5,7 +5,7 @@ using p_mvcHacienda.Servicios;
 
 namespace Caracterizacion
 {
-    // TO-BE: 05-reto2-patrones/04-src/active. La venta pasa por el Adapter y la
+    // TO-BE: 05-reto2-patrones/04-src/active. La venta usa vender<T> y la
     // atenuacion es el enum propio Atenuaciones.
     internal class Program : IDiferencias
     {
@@ -25,7 +25,7 @@ namespace Caracterizacion
         {
             var potreroObj = h.buscar_potrero(potrero);
             var resObj = potreroObj.buscar_res(res);
-            return h.vender(new InventarioPotrero(potreroObj), resObj, monto);
+            return h.vender(potreroObj, resObj, monto);
         }
     }
 }
