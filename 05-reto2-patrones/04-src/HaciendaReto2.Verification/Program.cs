@@ -54,6 +54,7 @@ namespace HaciendaReto2.Verification
             DirectorAdmiteVarianteNuevaSinModificarse();
 
             // --- Eventos y suscripciones (P-03, Observer) ---
+            AltaDeResConservaAvisoDeDesnutricion();
             AlimentarInformaDesnutricion();
             AlimentarInformaAptaParaVenta();
             AlimentarSinAvisoNoAgregaLineas();
@@ -170,7 +171,7 @@ namespace HaciendaReto2.Verification
             hacienda.crear_potrero("X-T", l_tipos_potreros.ternero);
 
             AssertThrows(
-                "Error inesperado en el método anadir_res_potrero: La edad de la res no corresponde al tipo de potrero ternero.",
+                "Error inesperado en el método anadir_res_potrero: Error inesperado en el metodo anadir_res: La res no puede ser añadida al potrero X-T porque su edad no corresponde al tipo de potrero",
                 () => hacienda.anadir_res_potrero("X-T", "Intrusa", 30, 300),
                 "un potrero de terneros rechaza una res de 30 meses");
         }
@@ -542,6 +543,22 @@ namespace HaciendaReto2.Verification
 
         // Gate de P-03: la suscripcion se establece una vez, en el constructor,
         // asi que repetir la operacion no deja handlers acumulados.
+        private static void AltaDeResConservaAvisoDeDesnutricion()
+        {
+            var hacienda = new Hacienda();
+            hacienda.crear_potrero("C-P", l_tipos_potreros.ternero);
+
+            AssertEqual(
+                "La res Flaca ha sido añadida al potrero C-P con exito.\n" +
+                "[Evento] La res 'Flaca' tiene un peso 100, está en desnutrición.",
+                hacienda.anadir_res_potrero("C-P", "Flaca", 8, 100),
+                "el alta conserva el aviso de desnutricion del baseline");
+
+            AssertEqual(1,
+                ContarSuscriptores(hacienda.buscar_potrero("C-P"), "publisher_peso_min", "evt_peso_min"),
+                "el publisher de peso del potrero conserva un solo handler");
+        }
+
         private static void SuscripcionNoCreceConLasLlamadas()
         {
             var hacienda = HaciendaConRes("S-T", l_tipos_potreros.ternero, "Contada", 6, 100);
@@ -642,7 +659,7 @@ namespace HaciendaReto2.Verification
             var res = potrero.buscar_res("Adaptada");
 
             AssertEqual(
-                "Venta de 'Adaptada' realizada con éxito.",
+                "Venta de la res Adaptada realizada con exito",
                 hacienda.vender(potrero, res, 1200),
                 "vender<T> liga la res con su inventario por tipo genérico");
             AssertEqual(0, potrero.L_reses.Count,

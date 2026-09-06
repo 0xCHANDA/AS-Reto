@@ -2,16 +2,20 @@
 
 ## Resultado
 
-La comparación confirma `MATCH` en C03 (alta de res), C04 (edad incompatible)
-y C18 (lectura de `L_ventas`). La diferencia vigente es C20, estructural: NEW
-separa `IValidarInformacion` en validadores específicos. No se afirma que AS-IS
-y TO-BE sean idénticos en todos los sentidos; la equivalencia se limita a los
-observables listados como `MATCH`.
+Los 20 casos de caracterización coinciden entre AS-IS y TO-BE. C03 conserva el
+aviso de bajo peso al dar de alta una res, C04 conserva el texto de la excepción
+por edad incompatible y C18 conserva el mensaje de venta.
+
+SC-3 introduce los cambios de contrato autorizados para la historia clínica.
+N08 y N09 verifican su comportamiento actual; no son una comparación directa
+contra AS-IS porque esa historia no existía allí.
 
 | Caso | Antes · `03-src/redisenado/HaciendaNEW`                                                                                                                                       | Después · `04-src/active`                                                                                                                                                     |
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | C01  | `OK` El potrero P1 se a añadido a la hacienda. · `potreros=1`                                                                                                                 | `OK` El potrero P1 se a añadido a la hacienda. · `potreros=1`                                                                                                                 |
 | C02  | `EXCEPTION` Exception:Error inesperado en el metodo crear_potrero: Ya existe un potrero con el nombre 'p1'.                                                                   | `EXCEPTION` Exception:Error inesperado en el metodo crear_potrero: Ya existe un potrero con el nombre 'p1'.                                                                   |
+| C03  | `OK` La res Lola ha sido añadida al potrero P1 con exito.\n[Evento] La res 'Lola' tiene un peso 100, está en desnutrición. · `reses=1;tipo=Ternero` | `OK` La res Lola ha sido añadida al potrero P1 con exito.\n[Evento] La res 'Lola' tiene un peso 100, está en desnutrición. · `reses=1;tipo=Ternero` |
+| C04  | `EXCEPTION` Exception:Error inesperado en el método anadir_res_potrero: Error inesperado en el metodo anadir_res: La res no puede ser añadida al potrero P1 porque su edad no corresponde al tipo de potrero | `EXCEPTION` Exception:Error inesperado en el método anadir_res_potrero: Error inesperado en el metodo anadir_res: La res no puede ser añadida al potrero P1 porque su edad no corresponde al tipo de potrero |
 | C05  | `OK` La res Manchas ha sido añadida al potrero PC con exito. · `tipo=Cebon`                                                                                                   | `OK` La res Manchas ha sido añadida al potrero PC con exito. · `tipo=Cebon`                                                                                                   |
 | C06  | `OK` La res Toro ha sido añadida al potrero PN con exito. · `tipo=Novillo`                                                                                                    | `OK` La res Toro ha sido añadida al potrero PN con exito. · `tipo=Novillo`                                                                                                    |
 | C07  | `OK` La res 'Lola' ha sido alimentada, ahora pesa 101 kg.\n[Evento] La res 'Lola' tiene un peso 101, está en desnutrición. · `peso=101`                                       | `OK` La res 'Lola' ha sido alimentada, ahora pesa 101 kg.\n[Evento] La res 'Lola' tiene un peso 101, está en desnutrición. · `peso=101`                                       |
@@ -25,6 +29,7 @@ observables listados como `MATCH`.
 | C15  | `EXCEPTION` Exception:Error inesperado en el método crear_vacuna (bacteriana): La fecha de vencimiento debe ser posterior a la fecha de aplicación                            | `EXCEPTION` Exception:Error inesperado en el método crear_vacuna (bacteriana): La fecha de vencimiento debe ser posterior a la fecha de aplicación                            |
 | C16  | `EXCEPTION` Exception:Error inesperado en el metodo aplicar_vacuna: La vacuna 'Bovina' ya fue aplicada a la res 'Lola'.                                                       | `EXCEPTION` Exception:Error inesperado en el metodo aplicar_vacuna: La vacuna 'Bovina' ya fue aplicada a la res 'Lola'.                                                       |
 | C17  | `OK` Error inesperado en el metodo aplicar_vacuna: No se puede aplicar más vacunas bacterianas a la res 'Lola'. Ya tiene las 3 permitidas. · `aplicadas=3`                    | `OK` Error inesperado en el metodo aplicar_vacuna: No se puede aplicar más vacunas bacterianas a la res 'Lola'. Ya tiene las 3 permitidas. · `aplicadas=3`                    |
+| C18  | `OK` Venta de la res Lola realizada con exito · `reses=0;ventas=1` | `OK` Venta de la res Lola realizada con exito · `reses=0;ventas=1` |
 | C19  | `OK` La res 'Gorda' ha sido alimentada, ahora pesa 410 kg.\n[Evento] La res 'Gorda' tiene un peso 410, apta para venta. · `peso=410`                                          | `OK` La res 'Gorda' ha sido alimentada, ahora pesa 410 kg.\n[Evento] La res 'Gorda' tiene un peso 410, apta para venta. · `peso=410`                                          |
 | C20  | `OK` La res 'Lola' ha sido alimentada, ahora pesa 102 kg.\n[Evento] La res 'Lola' tiene un peso 102, está en desnutrición. · `iguales=True`                                   | `OK` La res 'Lola' ha sido alimentada, ahora pesa 102 kg.\n[Evento] La res 'Lola' tiene un peso 102, está en desnutrición. · `iguales=True`                                   |
 
@@ -44,6 +49,6 @@ observables listados como `MATCH`.
 | N10  | Builder        | El literal sin interpolar sobrevive al patrón                             | `LoteBacterianoConservaLiteralNombreSinInterpolar` `:315-325` |
 
 ```text
-Verificaciones ejecutadas: 92
+Verificaciones ejecutadas: 94
 TODAS LAS VERIFICACIONES PASARON.
 ```

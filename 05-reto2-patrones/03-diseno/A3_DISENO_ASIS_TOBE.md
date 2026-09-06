@@ -32,9 +32,9 @@ El color dice a qué patrón pertenece cada clase, que es lo que pide el enuncia
 
 `FabricadorVacunas` aparece dos veces a propósito: en rojo dentro del AS-IS, con las dos copias de `CrearLote` y el `$` que falta en la línea 86; y en verde dentro del TO-BE, ya como Director del Builder. Es el caso más claro de "se transforma" y separarlo deja ver qué salió y qué entró.
 
-La venta queda en la interfaz genérica `vender<T>(IInventario<T>, T, uint)`: `ResService` pasa `Potrero` y `Res` con el mismo tipo `T`. No existe un `InventarioPotrero` adoptado ni un Adapter en el TO-BE.
+La venta queda en la interfaz genérica `vender<T>(IInventario<T>, T, uint)`: `ResService` pasa `Potrero` y `Res` con el mismo tipo `T`. `InventarioPotrero` no existe en el TO-BE y Adapter no forma parte de la arquitectura adoptada.
 
-Tres publishers salen en gris punteado. Se instancian y nadie los escucha: `PublisherPotreroMitad` y `PublisherPotreroLleno` en `active/Potrero.cs:23-24`, y `PublisherVacunaVencida` en `active/Hacienda.cs:46`. Los avisos que emiten no llegan a ningún observador. Está dibujado así porque es lo que hace el código, no porque convenga.
+`PublisherPotreroMitad`, `PublisherPotreroLleno`, `PublisherPesoMin` y `PublisherPesoVenta` se conectan una vez al recolector al crear o usar cada potrero; el guard cubre también los potreros cargados desde persistencia. `PublisherVacunaVencida` en `active/Hacienda.cs:46` sigue sin observador ni invocación; está dibujado en gris punteado porque así se conserva en el código.
 
 ## Qué se verificó antes de exportar
 
@@ -58,6 +58,6 @@ Que el TO-BE no tape nada no es un detalle estético. Si una caja nueva cubriera
 ## Restricciones observables que el diseño conserva
 
 - Builder mantiene el tipo de vacuna, la construcción individual y por lote, y los mensajes existentes. Incluido el texto literal de `FabricadorVacunas.cs:86`, que `BuilderBacteriana` conserva devolviendo `"{nombre}"` sin interpolar.
-- Observer conserva el orden de los avisos: en `Potrero`, mitad, lleno, peso mínimo, peso venta; en `Hacienda`, peso mínimo, peso venta.
+- Observer conserva el orden de los avisos: en `Potrero`, mitad, lleno, peso mínimo, peso venta; en `Hacienda`, peso mínimo, peso venta. La captura de `anadir_res_potrero` delimita los avisos del alta.
 - Factory Method resuelve por `AplicaA(edad)`, no por un condicional dentro de la fábrica. Una categoría nueva se registra en la raíz de composición y ningún cliente cambia.
 - Adapter fue evaluado como alternativa para la incompatibilidad de tipos, pero se descartó por reforzar en ejecución la precondición del inventario. La corrección vigente es el método genérico `vender<T>`.

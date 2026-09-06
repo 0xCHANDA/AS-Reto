@@ -32,7 +32,7 @@ AS-IS: `03-src/redisenado/HaciendaNEW/`. TO-BE: `05-reto2-patrones/04-src/active
 | E-13 | `RecolectorMensajes` | Entra | — | Único observador. Guarda avisos solo mientras hay una captura abierta | Los publishers notifican a él en vez de a lambdas locales |
 | E-14 | `CapturaMensajes` | Entra | — | Delimita qué operación lee qué mensajes | Cada operación abre la suya, así ninguna lee los de otra |
 | E-15 | `PublisherPesoMin`, `PublisherPesoVenta`, `PublisherVacunacionCompletada` | Se transforma | Emitían a lambdas locales | Emiten al recolector | Suscritos en `Hacienda.cs:84-86`. El orden de emisión no cambia |
-| E-15b | `PublisherPotreroMitad`, `PublisherPotreroLleno` | Se transforma | Sus avisos llegaban a las lambdas de `Potrero.anadir_res` | Se instancian en `active/Potrero.cs:23-24` y nadie los escucha | Nadie. Sus avisos se pierden, igual que antes cuando el publisher no tenía suscriptores |
+| E-15b | Publishers de `Potrero` | Se transforma | Sus avisos llegaban a lambdas de `Potrero.anadir_res` | Se conectan una vez al recolector al crear o usar el potrero | `Hacienda` conecta el recolector con un guard; `anadir_res_potrero` abre la captura antes de agregar la res |
 | E-15c | `PublisherVacunaVencida` | Se transforma | Ya estaba sin uso | Se instancia en `active/Hacienda.cs:46` y nunca se suscribe ni se invoca | Nadie. Deuda declarada |
 
 ## Corrección de la venta (sin Adapter)
@@ -65,8 +65,8 @@ SC-3 endureció cuatro puntos que antes aceptaban cualquier cosa. Van declarados
 | `new Res(..., historiaClinica: null)` | Aceptaba, el campo quedaba muerto | `ArgumentNullException` |
 | Compartir una historia entre dos reses | Aceptaba en silencio | `InvalidOperationException` |
 
-> Dos elementos quedan fuera de la tabla porque no cambian y esta tabla es de cambios. `ICreacionVacuna` sigue publicando sus cuatro firmas: Builder quitó el cuerpo duplicado, no el contrato, y eso queda como deuda declarada. `IInventario<Producto>` es byte a byte el mismo archivo; lo que cambia es que ahora tiene un implementador que acepta potreros.
+> Dos elementos quedan fuera de la tabla porque no cambian y esta tabla es de cambios. `ICreacionVacuna` sigue publicando sus cuatro firmas: Builder quitó el cuerpo duplicado, no el contrato, y eso queda como deuda declarada. `IInventario<T>` conserva su contrato genérico; la venta vigente exige que inventario y producto compartan el mismo `T`.
 
-> Sobre los publishers sin observador: el Observer del TO-BE cubre los tres avisos que `Hacienda` emite. Los cuatro publishers que `Potrero` instancia y `publisher_vacuna_vencida` siguen sin suscriptor. No los conectamos porque hacerlo añadiría mensajes a la salida y eso es un cambio de comportamiento observable no autorizado.
+> Sobre los publishers: el Observer del TO-BE cubre los tres avisos que `Hacienda` emite y los cuatro publishers de cada `Potrero`. La captura del alta conserva los avisos legacy sin acumular handlers. `publisher_vacuna_vencida` sigue sin suscriptor ni invocación.
 
 > Sobre `HistoriaClinica`: en el AS-IS (`03-src/redisenado/`) la clase no existe. Sí aparece, vacía y sin uso, en `05-reto2-patrones/04-src/baseline-input-2026-08-31/`, que es un snapshot intermedio y no el punto de partida de este reto.

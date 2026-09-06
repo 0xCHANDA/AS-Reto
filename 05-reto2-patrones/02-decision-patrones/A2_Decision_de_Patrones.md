@@ -33,14 +33,14 @@ Así, `Hacienda.anadir_res_potrero` deja de decidir el subtipo y solo pide `cata
 
 ## Observer — P-03
 
-Observer no nació en Reto 2: el AS-IS ya tenía publishers, eventos y suscripciones `+=`. El problema era su ciclo de vida. En el TO-BE, `Hacienda` se suscribe una vez en el constructor a `RecolectorMensajes`; `CapturaMensajes` delimita los avisos de cada operación. Esto evita acumulación de handlers y mezcla entre operaciones, conservando el orden de mensajes caracterizado.
+Observer no nació en Reto 2: el AS-IS ya tenía publishers, eventos y suscripciones `+=`. El problema era su ciclo de vida. En el TO-BE, `Hacienda` se suscribe una vez en el constructor a `RecolectorMensajes` y cada potrero conecta sus publishers una vez al crearse; `CapturaMensajes` delimita los avisos de cada operación. Esto evita acumulación de handlers y mezcla entre operaciones, conservando el orden de mensajes caracterizado.
 
 ## Corrección LSP de la venta
 
 La firma anterior `vender(IInventario<Producto>, Producto, ...)` permitía a cualquier cliente pasar un producto válido para el contrato. `InventarioPotrero` reforzaba esa precondición: `agregar` y `retirar` lanzaban cuando el producto no era `Res`. Que el único cliente actual pasara una res no vuelve sustituible el adaptador; el contrato público seguía siendo más amplio.
 
-La alternativa mínima es type-safe: `IVenta.vender<T>(IInventario<T>, T, uint) where T : Producto`. `ResService` pasa `Potrero` y `Res` con el mismo `T`; los inventarios de derivados también preservan su propio tipo. Se retira el Adapter y no se cuenta esta corrección de tipos como patrón adoptado. El mensaje y la venta observable permanecen iguales.
+La alternativa mínima es type-safe: `IVenta.vender<T>(IInventario<T>, T, uint) where T : Producto`. `ResService` pasa `Potrero` y `Res` con el mismo `T`; los inventarios de derivados también preservan su propio tipo. Se retira el Adapter y no se cuenta esta corrección de tipos como patrón adoptado. La venta conserva el retiro, el registro y el mensaje observable caracterizado en C18.
 
 ## SC-3 y coherencia documental
 
-SC-3 agrega `HistoriaClinica` a cada `Res`, con `VacunasAplicadas` y `EventosClinicos` separados. Aplicar vacuna no duplica el hecho como evento. No se vincula falsamente con P-04/P-05: ampliar una historia clínica no exige crear clases de vacuna. El diagrama A3 es histórico y declara que no representa retrospectivamente SC-3; la fuente activa y `HaciendaReto2.Verification` son la evidencia vigente.
+SC-3 agrega `HistoriaClinica` a cada `Res`, con `VacunasAplicadas` y `EventosClinicos` separados. Aplicar vacuna no duplica el hecho como evento. No se vincula falsamente con P-04/P-05: ampliar una historia clínica no exige crear clases de vacuna. El diagrama A3 final representa `HistoriaClinica`, `EventoClinico` e `IPersistenciaEventosClinicos` como composición del dominio, sin atribuirles un cuarto patrón GoF; la fuente activa y `HaciendaReto2.Verification` son la evidencia vigente.

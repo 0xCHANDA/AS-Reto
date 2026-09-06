@@ -101,6 +101,7 @@ namespace Bib_Hacienda.Clases
                 }
 
                 Potrero nuevo_potrero = new Potrero(indentificacion, tipo_potrero);
+                nuevo_potrero.ConectarObservador(recolectorMensajes);
                 l_potreros.Add(nuevo_potrero);
 
                 return ($"El potrero {indentificacion} se a añadido a la hacienda. ");
@@ -174,12 +175,24 @@ namespace Bib_Hacienda.Clases
             try
             {
                 Potrero potrero = buscar_potrero(id_potrero);
+                // Los potreros cargados desde persistencia no pasan por crear_potrero.
+                // El guard del potrero conserva una sola suscripcion estable.
+                potrero.ConectarObservador(recolectorMensajes);
 
                 Res res = catalogoCreadoresRes.ParaEdad(edad).Crear(nombre, peso, edad);
 
-                potrero.agregar(res);
+                string mensajesEventos;
+                using (CapturaMensajes captura = recolectorMensajes.Capturar())
+                {
+                    potrero.agregar(res);
+                    mensajesEventos = captura.Texto();
+                }
 
-                return $"La res {nombre} ha sido añadida al potrero {potrero.Identificacion} con exito.";
+                string mensajeFinal = $"La res {nombre} ha sido añadida al potrero {potrero.Identificacion} con exito.";
+                if (!string.IsNullOrEmpty(mensajesEventos))
+                    mensajeFinal += "\n" + mensajesEventos.TrimEnd();
+
+                return mensajeFinal;
             }
             catch (Exception er)
             {
@@ -210,6 +223,9 @@ namespace Bib_Hacienda.Clases
             );
 
             registroVentas.registrar(venta);
+
+            if (productoRetirado is Res)
+                return $"Venta de la res {productoRetirado.Nombre} realizada con exito";
 
             return $"Venta de '{productoRetirado.Nombre}' realizada con éxito.";
         }

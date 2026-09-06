@@ -24,6 +24,7 @@ namespace Bib_Hacienda.Clases
         private PublisherPotreroLleno publisher_potrero_lleno = new PublisherPotreroLleno();
         private PublisherPesoVenta publisher_peso_venta = new PublisherPesoVenta();
         private PublisherPesoMin publisher_peso_min = new PublisherPesoMin();
+        private bool observadorConectado;
 
         //EventHandler
         internal void EventHandler() { }
@@ -33,6 +34,19 @@ namespace Bib_Hacienda.Clases
         {
             this.Identificacion = identificacion;
             this.tipo_potrero = tipo_potrero;
+        }
+
+        // La suscripcion pertenece a la vida del potrero, no a cada alta de res.
+        internal void ConectarObservador(IObservadorMensaje observador)
+        {
+            if (observadorConectado)
+                return;
+
+            publisher_potrero_mitad.evt_potrero_mitad += observador.Recibir;
+            publisher_potrero_lleno.evt_potrero_lleno += observador.Recibir;
+            publisher_peso_venta.evt_peso_venta += observador.Recibir;
+            publisher_peso_min.evt_peso_min += observador.Recibir;
+            observadorConectado = true;
         }
 
         public void agregar(Res producto){
@@ -70,8 +84,8 @@ namespace Bib_Hacienda.Clases
 
     if (!edadValida)
     {
-        throw new InvalidOperationException(
-            $"La edad de la res no corresponde al tipo de potrero {tipo_potrero}.");
+        throw new Exception(
+            $"Error inesperado en el metodo anadir_res: La res no puede ser añadida al potrero {identificacion} porque su edad no corresponde al tipo de potrero");
     }
 
     // Agregar

@@ -52,7 +52,7 @@ Cómo se relacionan entre sí: Factory Method crea las reses que luego usa la ve
 
 **El catálogo no lleva condicionales.** `CatalogoCreadoresRes.ParaEdad` resuelve preguntando a cada creador si aplica. El día que alguien meta un `switch` ahí, volvemos al problema que este trabajo vino a resolver: cada categoría nueva obligaría a modificar el catálogo.
 
-**Las suscripciones van en el constructor de `Hacienda`, nunca dentro de un método.** `Hacienda` vive como singleton mientras dure el proceso. Un `+=` dentro de un método agrega un handler en cada llamada y los avisos empiezan a duplicarse. Así estaba antes y así se rompía.
+**No agregues suscripciones ad hoc dentro de una operación de negocio.** Las conexiones permanentes de `Hacienda` se establecen durante su inicialización. Los publishers propios de un `Potrero` se conectan solo mediante `Potrero.ConectarObservador(...)`, al crear o usar el potrero; su guard conserva una sola conexión. No sustituyas ese mecanismo por `+=` repartidos entre métodos, porque volverían a acumular handlers durante la vida del proceso.
 
 **El literal roto de `FabricadorVacunas.cs:86` se conserva a propósito.** El resumen del lote bacteriano imprime `- Nombre: {nombre}` sin interpolar, porque falta un `$`. Es salida observable y está congelada. `BuilderBacteriana.NombreEnResumenDeLote` devuelve `"{nombre}"` para preservarlo. No lo arregles sin autorización: hay una prueba que falla si lo haces, y está puesta a propósito.
 
@@ -61,18 +61,18 @@ Cómo se relacionan entre sí: Factory Method crea las reses que luego usa la ve
 **Antes de dar por bueno un cambio, corre las dos verificaciones.**
 
 ```bash
-dotnet run --project 04-src/HaciendaReto2.Verification          # 92 controles
+dotnet run --project 04-src/HaciendaReto2.Verification          # 94 controles
 cd 04-verificacion/caracterizacion                              # salidas antes/después
 dotnet run --project Caracterizacion.AsIs  > SALIDA-ASIS.txt
 dotnet run --project Caracterizacion.ToBe  > SALIDA-TOBE.txt
 diff SALIDA-ASIS.txt SALIDA-TOBE.txt
 ```
 
-El `diff` debe mostrar C03, C04 y C18. Ni una línea más.
+El `diff` no debe mostrar diferencias entre los casos legacy.
 
 ## Deuda pendiente
 
-**Tres avisos que no llegan a nadie.** `PublisherPotreroMitad` y `PublisherPotreroLleno` se instancian en `Potrero.cs:23-24`, y `PublisherVacunaVencida` en `Hacienda.cs:46`. Los tres emiten y nadie los escucha. La consecuencia visible está registrada como C03: al dar de alta una res desnutrida ya no aparece la advertencia. Cerrarlo exige decidir qué devuelve `anadir_res_potrero`, que hoy no concatena eventos.
+**Un aviso que no llega a nadie.** `PublisherVacunaVencida` se instancia en `Hacienda.cs:46` y no tiene suscriptor ni invocación. Los publishers de cada `Potrero` se conectan una vez al recolector al crear o usar el potrero; el alta abre una captura y conserva el orden de sus avisos.
 
 **El contrato de vacunas sigue con cuatro firmas.** `ICreacionVacuna` publica cuatro sobrecargas de `crear_vacuna`. El Builder eliminó el cuerpo duplicado, no el contrato. Un tipo nuevo de vacuna todavía obliga a tocar esa interfaz.
 

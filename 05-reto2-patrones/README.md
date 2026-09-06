@@ -59,7 +59,6 @@ La fuente activa implementa SC-3 Historia Clínica. Cada `Res` posee exactamente
 ## Pendientes abiertos
 
 - Definir la autorizacion relacionada con P-06 y la pregunta formal a la Lider Tecnica.
-- Resolver la diferencia observable de mensajes de venta.
 
 ## Build del baseline
 
