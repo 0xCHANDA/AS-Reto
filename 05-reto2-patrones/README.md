@@ -2,7 +2,7 @@
 
 ## Estado
 
-`04-src/baseline-input-2026-08-31/` es el snapshot inmutable de entrada. La implementacion evolutiva de Reto 2 vive en `04-src/active/`; el proyecto de verificacion referencia esta ultima fuente.
+`03-src/redisenado/HaciendaNEW/` es el AS-IS real del Reto 1 para el análisis. `04-src/baseline-input-2026-08-31/` es un snapshot inmutable histórico de la preparación de Reto 2, no el AS-IS: ya contiene implementaciones de patrones. La implementación evolutiva de Reto 2 vive en `04-src/active/`; el proyecto de verificación referencia esta última fuente.
 
 ## Proposito
 
@@ -28,6 +28,7 @@ El codigo proviene de `p_mvcHacienda.zip` (SHA-256 `e3c45306a94f5473b4bab353265e
 
 - [A1 — Puntos de dolor](01-analisis/A1_Puntos_de_Dolor.md)
 - [A2 — Decision de patrones](02-decision-patrones/A2_Decision_de_Patrones.md)
+- [A2.2 — Bitácora IA](02-decision-patrones/A2_Bitacora_IA.md)
 - [Baseline de codigo inmutable](04-src/baseline-input-2026-08-31/)
 - [Fuente activa](04-src/active/)
 - [Diseno AS-IS / TO-BE](03-diseno/A3_DISENO_ASIS_TOBE.md): artefacto canónico de la Actividad 3, con un Draw.io de una página y layers `AS-IS` / `TO-BE`.
@@ -41,6 +42,8 @@ El codigo proviene de `p_mvcHacienda.zip` (SHA-256 `e3c45306a94f5473b4bab353265e
 - Builder
 - Observer
 - Adapter
+
+La venta usa una firma genérica type-safe; no se cuenta Adapter como patrón adoptado porque el adaptador previo reforzaba indebidamente el contrato de `IInventario<Producto>`.
 
 Facade fue descartado como patrón nuevo en A2: `Hacienda` ya coordina parte del flujo y otra fachada duplicaría ese rol.
 
@@ -56,10 +59,8 @@ La fuente activa implementa SC-3 Historia Clínica. Cada `Res` posee exactamente
 
 ## Pendientes abiertos
 
-- Decidir el tratamiento del `$` faltante en `FabricadorVacunas`.
 - Definir la autorizacion relacionada con P-06 y la pregunta formal a la Lider Tecnica.
 - Resolver la diferencia observable de mensajes de venta.
-- Contrastar la bitacora IA con lo que ocurrio realmente.
 
 ## Build del baseline
 

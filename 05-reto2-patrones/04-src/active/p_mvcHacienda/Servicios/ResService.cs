@@ -117,8 +117,8 @@ namespace p_mvcHacienda.Servicios
         {
             try
             {
-                // Hacienda.vender opera sobre IInventario<Producto>. El potrero es
-                // un IInventario<Res>, asi que se adapta en esta capa.
+                // La firma generica exige que inventario y producto compartan el
+                // mismo tipo concreto; un potrero se vende como inventario de Res.
                 var potrero = _hacienda.buscar_potrero(potreroId);
                 var res = potrero.buscar_res(nombreRes);
 
@@ -127,7 +127,7 @@ namespace p_mvcHacienda.Servicios
                     throw new Exception($"No se encontro la res '{nombreRes}' en el potrero '{potreroId}'.");
                 }
 
-                string mensaje = _hacienda.vender(new InventarioPotrero(potrero), res, monto);
+                string mensaje = _hacienda.vender(potrero, res, monto);
                 _persistenciaVentas.GuardarVentas(_hacienda.L_ventas.ToList());
                 _persistenciaReses.GuardarReses(_hacienda.L_potreros);
                 return mensaje;
