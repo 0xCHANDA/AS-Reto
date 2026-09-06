@@ -4,7 +4,7 @@ Para la Dirección de Ingeniería y para quien aprueba el presupuesto.
 
 ## En una frase
 
-El sistema hace exactamente lo mismo que antes. Lo que cambió es cuánto cuesta pedirle algo nuevo.
+El propósito de negocio se conserva, pero no se afirma equivalencia estricta: la comparación registra una diferencia estructural en C20. Lo que cambió principalmente es cuánto cuesta pedirle algo nuevo.
 
 ## Qué tocamos y qué no
 

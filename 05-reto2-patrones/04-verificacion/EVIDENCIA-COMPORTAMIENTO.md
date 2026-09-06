@@ -1,6 +1,12 @@
-# Actividad 4.2 — Evidencia de que el comportamiento no cambia
+# Actividad 4.2 — Evidencia de comportamiento y cambios autorizados
 
 ## Resultado
+
+La comparación confirma `MATCH` en C03 (alta de res), C04 (edad incompatible)
+y C18 (lectura de `L_ventas`). La diferencia vigente es C20, estructural: NEW
+separa `IValidarInformacion` en validadores específicos. No se afirma que AS-IS
+y TO-BE sean idénticos en todos los sentidos; la equivalencia se limita a los
+observables listados como `MATCH`.
 
 | Caso | Antes · `03-src/redisenado/HaciendaNEW`                                                                                                                                       | Después · `04-src/active`                                                                                                                                                     |
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -32,7 +38,7 @@
 | N04  | Observer       | Repetir la operación no acumula handlers                                  | `SuscripcionNoCreceConLasLlamadas` `:545-574`                 |
 | N05  | Observer       | La captura conserva el orden de emisión                                   | `CapturaConservaElOrdenDeEmision` `:575-609`                  |
 | N06  | Observer       | Una operación no lee los avisos de otra                                   | `CapturaAislaOperacionesEntreSi` `:610-637`                   |
-| N07  | Adapter        | La venta atraviesa `InventarioPotrero`, retira la res y registra la venta | `VentaDeResUsaElAdapter` `:638-657`                           |
+| N07  | Corrección de tipos | La venta usa `vender<T>` con inventario y producto ligados por el mismo tipo | `VentaDeResUsaElVenderGenerico` |
 | N08  | SC-3           | Cada res conserva su propia historia                                      | `HistoriaClinicaNoPuedeCompartirseEntreReses` `:760-771`      |
 | N09  | SC-3           | Una vacuna se registra una vez y no se duplica como evento                | `VacunaAplicadaSeRegistraUnaVezEnHistoria` `:676-688`         |
 | N10  | Builder        | El literal sin interpolar sobrevive al patrón                             | `LoteBacterianoConservaLiteralNombreSinInterpolar` `:315-325` |

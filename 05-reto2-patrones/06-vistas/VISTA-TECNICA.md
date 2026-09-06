@@ -31,9 +31,8 @@ Si algo no aparece cuando el sistema arranca, este archivo es el primer sitio do
 | Factory Method | Decide qué subtipo de `Res` se instancia | `Bib_Hacienda/Interfaces/ICreadorRes.cs`, `Clases/Creacion/` (catálogo y tres creadores) |
 | Builder | Separa la secuencia de creación de vacunas de lo que cambia por variante | `Interfaces/IVacunaBuilder.cs`, `Clases/Construccion/`, con `Clases/FabricadorVacunas.cs` como Director |
 | Observer | Fija quién escucha los avisos y por cuánto tiempo | `Interfaces/IObservadorMensaje.cs`, `Eventos/RecolectorMensajes.cs`, `Eventos/CapturaMensajes.cs` |
-| Adapter | Deja que un potrero pase por el contrato genérico de inventario | `p_mvcHacienda/Servicios/InventarioPotrero.cs` |
 
-Cómo se relacionan entre sí: solo hay una conexión real. El potrero que envuelve el Adapter contiene reses que creó el Factory Method. Builder y Observer no se tocan con nadie.
+Cómo se relacionan entre sí: Factory Method crea las reses que luego usa la venta genérica; Builder y Observer operan en sus propios flujos. No hay Adapter adoptado.
 
 `HistoriaClinica` y `EventoClinico` no son un patrón. Son composición de dominio y salieron de la solicitud SC-3.
 
@@ -57,7 +56,7 @@ Cómo se relacionan entre sí: solo hay una conexión real. El potrero que envue
 
 **El literal roto de `FabricadorVacunas.cs:86` se conserva a propósito.** El resumen del lote bacteriano imprime `- Nombre: {nombre}` sin interpolar, porque falta un `$`. Es salida observable y está congelada. `BuilderBacteriana.NombreEnResumenDeLote` devuelve `"{nombre}"` para preservarlo. No lo arregles sin autorización: hay una prueba que falla si lo haces, y está puesta a propósito.
 
-**El Adapter solo sirve para vender reses.** `InventarioPotrero` acepta `Producto` por firma pero lanza con cualquier cosa que no sea `Res`. Se construye en un único sitio, `ResService.cs:130`. No lo uses como inventario de propósito general.
+**La venta usa `vender<T>`.** `ResService` pasa `Potrero` y `Res` con el mismo parámetro genérico, de modo que la compatibilidad se comprueba en compilación. Adapter fue descartado y no forma parte del diseño vigente.
 
 **Antes de dar por bueno un cambio, corre las dos verificaciones.**
 
@@ -77,7 +76,7 @@ El `diff` debe mostrar C03, C04 y C18. Ni una línea más.
 
 **El contrato de vacunas sigue con cuatro firmas.** `ICreacionVacuna` publica cuatro sobrecargas de `crear_vacuna`. El Builder eliminó el cuerpo duplicado, no el contrato. Un tipo nuevo de vacuna todavía obliga a tocar esa interfaz.
 
-**El Adapter verifica el tipo en ejecución.** `InventarioPotrero` convierte de `Producto` a `Res` con un chequeo que antes hacía el compilador. Arreglarlo de raíz exige partir `IInventario<T>`, y eso toca la biblioteca de dominio.
+**La corrección de la venta es type-safe.** `Hacienda.vender<T>(IInventario<T>, T, uint)` conserva la relación entre inventario y producto sin una clase adaptadora ni un chequeo de conversión en ejecución.
 
 **Doscientas diecinueve líneas de control de acceso que no corren.** `Autenticacion` y `InterceptorAutenticacion` existen, tienen las reglas de permisos por rol y nadie las instancia. Quien vaya a tocar permisos va a editar el archivo equivocado. Está sin conectar a propósito: hacerlo empezaría a denegar operaciones que hoy pasan, y eso necesita autorización del negocio.
 

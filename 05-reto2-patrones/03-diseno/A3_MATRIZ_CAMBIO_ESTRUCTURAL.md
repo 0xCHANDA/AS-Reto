@@ -35,13 +35,11 @@ AS-IS: `03-src/redisenado/HaciendaNEW/`. TO-BE: `05-reto2-patrones/04-src/active
 | E-15b | `PublisherPotreroMitad`, `PublisherPotreroLleno` | Se transforma | Sus avisos llegaban a las lambdas de `Potrero.anadir_res` | Se instancian en `active/Potrero.cs:23-24` y nadie los escucha | Nadie. Sus avisos se pierden, igual que antes cuando el publisher no tenía suscriptores |
 | E-15c | `PublisherVacunaVencida` | Se transforma | Ya estaba sin uso | Se instancia en `active/Hacienda.cs:46` y nunca se suscribe ni se invoca | Nadie. Deuda declarada |
 
-## Adapter — P-07
+## Corrección de la venta (sin Adapter)
 
-| ID | Elemento | Estado | Qué hacía antes | Qué hace ahora | Quién dependía y cómo se reconecta |
-|---|---|---|---|---|---|
-| E-16 | `Hacienda.vender_res` | Sale | Único camino de venta vivo (`Hacienda.cs:182-202`) | — | `ResService.Vender` pasa al camino genérico |
-| E-17 | `InventarioPotrero` | Entra | — | Traduce `IInventario<Res>` a `IInventario<Producto>` | `ResService` envuelve el potrero antes de llamar a `vender` |
-| E-19 | `ResService.Vender` | Se transforma | Llamaba a `vender_res` | Llama a `_hacienda.vender(new InventarioPotrero(potrero), res, monto)` | El controlador no cambia |
+La incompatibilidad se resolvió retirando el Adapter candidato y usando
+`vender<T>(IInventario<T>, T, uint)`. `ResService` pasa `Potrero` y `Res` con el
+mismo `T`; el compilador conserva la relación entre producto e inventario.
 
 ## SC-3 — historia clínica
 

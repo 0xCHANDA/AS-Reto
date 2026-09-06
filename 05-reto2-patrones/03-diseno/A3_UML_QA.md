@@ -20,7 +20,7 @@ Decisiones que materializa el diagrama: `A1_Puntos_de_Dolor.md` y `A2_Decision_d
 | Factory Method | `ICreadorRes` es Creator; `CreadorTernero`, `CreadorCebon` y `CreadorNovillo` son ConcreteCreator; `CatalogoCreadoresRes` es el registro que resuelve por edad. Los clientes son `Hacienda.anadir_res_potrero` y `PersistenciaService` |
 | Builder | `IVacunaBuilder` es Builder; `BuilderBacteriana` y `BuilderViva` son ConcreteBuilder; `FabricadorVacunas` es el **Director**; `Vacuna` es Product |
 | Observer | Los publishers son Subject; `IObservadorMensaje` es Observer; `RecolectorMensajes` es ConcreteObserver. La suscripción ocurre en el constructor de `Hacienda`, líneas 84-86, no en `Program` |
-| Adapter | `IInventario<Producto>` es Target; `Potrero` es Adaptee; `InventarioPotrero` es Adapter; `ResService` es el cliente |
+| Venta genérica | `vender<T>(IInventario<T>, T, uint)` liga el inventario y el producto; `ResService` es el cliente |
 
 Facade quedó descartado en A2 y no se representa. SC-3 sí está en el diagrama: `HistoriaClinica`, `EventoClinico` e `IPersistenciaEventosClinicos`, en morado y sin patrón asociado.
 
@@ -71,4 +71,4 @@ Lo que ningún script juzga se revisó a ojo sobre el PNG exportado: texto que s
 
 ## Lo que este control no cubre
 
-Que el diagrama corresponda al código no demuestra que el código se comporte igual que antes. Eso se verifica aparte, en `04-verificacion/EVIDENCIA-COMPORTAMIENTO.md`, donde hay tres diferencias declaradas.
+Que el diagrama corresponda al código no demuestra que el código se comporte igual que antes. Eso se verifica aparte, en `04-verificacion/EVIDENCIA-COMPORTAMIENTO.md`, donde C03, C04 y C18 son `MATCH` y C20 es una diferencia estructural.

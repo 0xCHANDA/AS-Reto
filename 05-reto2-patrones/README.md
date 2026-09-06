@@ -41,9 +41,8 @@ El codigo proviene de `p_mvcHacienda.zip` (SHA-256 `e3c45306a94f5473b4bab353265e
 - Factory Method
 - Builder
 - Observer
-- Adapter
 
-La venta usa una firma genérica type-safe; no se cuenta Adapter como patrón adoptado porque el adaptador previo reforzaba indebidamente el contrato de `IInventario<Producto>`.
+La venta usa la firma genérica type-safe `vender<T>(IInventario<T>, T, uint)`. Adapter fue evaluado y descartado; no forma parte del conjunto adoptado.
 
 Facade fue descartado como patrón nuevo en A2: `Hacienda` ya coordina parte del flujo y otra fachada duplicaría ese rol.
 

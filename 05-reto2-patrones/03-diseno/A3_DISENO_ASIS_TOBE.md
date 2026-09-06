@@ -28,12 +28,11 @@ El color dice a qué patrón pertenece cada clase, que es lo que pide el enuncia
 | Azul | Factory Method (P-01) |
 | Verde | Builder (P-04) |
 | Amarillo | Observer (P-03) |
-| Naranja | Adapter (P-07) |
 | Morado | SC-3, historia clínica (sin patrón asociado) |
 
 `FabricadorVacunas` aparece dos veces a propósito: en rojo dentro del AS-IS, con las dos copias de `CrearLote` y el `$` que falta en la línea 86; y en verde dentro del TO-BE, ya como Director del Builder. Es el caso más claro de "se transforma" y separarlo deja ver qué salió y qué entró.
 
-`IInventario<Producto>` va en negro. Esa interfaz existe igual antes y después; el papel de Target lo comunica la flecha de `InventarioPotrero`, no el color. `Producto` aparece en el diagrama porque sin él no se entiende el Adapter: `Res` hereda de `Producto`, pero `IInventario<Res>` no puede pasar por `IInventario<Producto>` porque el genérico es invariante.
+La venta queda en la interfaz genérica `vender<T>(IInventario<T>, T, uint)`: `ResService` pasa `Potrero` y `Res` con el mismo tipo `T`. No existe un `InventarioPotrero` adoptado ni un Adapter en el TO-BE.
 
 Tres publishers salen en gris punteado. Se instancian y nadie los escucha: `PublisherPotreroMitad` y `PublisherPotreroLleno` en `active/Potrero.cs:23-24`, y `PublisherVacunaVencida` en `active/Hacienda.cs:46`. Los avisos que emiten no llegan a ningún observador. Está dibujado así porque es lo que hace el código, no porque convenga.
 
@@ -61,4 +60,4 @@ Que el TO-BE no tape nada no es un detalle estético. Si una caja nueva cubriera
 - Builder mantiene el tipo de vacuna, la construcción individual y por lote, y los mensajes existentes. Incluido el texto literal de `FabricadorVacunas.cs:86`, que `BuilderBacteriana` conserva devolviendo `"{nombre}"` sin interpolar.
 - Observer conserva el orden de los avisos: en `Potrero`, mitad, lleno, peso mínimo, peso venta; en `Hacienda`, peso mínimo, peso venta.
 - Factory Method resuelve por `AplicaA(edad)`, no por un condicional dentro de la fábrica. Una categoría nueva se registra en la raíz de composición y ningún cliente cambia.
-- Adapter vive en `p_mvcHacienda/Servicios/`, no en la biblioteca. La incompatibilidad que resuelve es de tipos, no de negocio.
+- Adapter fue evaluado como alternativa para la incompatibilidad de tipos, pero se descartó por reforzar en ejecución la precondición del inventario. La corrección vigente es el método genérico `vender<T>`.

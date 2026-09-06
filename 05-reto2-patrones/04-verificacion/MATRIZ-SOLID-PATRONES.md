@@ -16,7 +16,6 @@
 | Factory Method | Refuerza | Refuerza | Neutro | Refuerza | Tensionado pero compensado |
 | Builder | Refuerza | Refuerza | Refuerza | Refuerza | Tensionado pero compensado |
 | Observer | Refuerza | Refuerza | Neutro | Refuerza | Tensionado pero compensado |
-| Adapter | Refuerza | Neutro | Tensionado pero compensado | Neutro | Neutro |
 
 ## Factory Method — P-01
 
@@ -50,10 +49,8 @@
 
 **DIP tensionado pero compensado.** `Hacienda` guarda un `RecolectorMensajes` concreto, y los publishers siguen usando delegados propios en lugar de una abstracción común. La tensión no sale de la frontera de eventos: el recolector implementa `IObservadorMensaje`, la suscripción ocurre una vez, y el arnés comprueba que el número de handlers no crece y que una operación no lee los avisos de otra.
 
-## Adapter — P-07
+## Corrección de tipos en la venta
 
-**SRP refuerza.** `InventarioPotrero` hace una sola cosa: traducir `IInventario<Res>` a `IInventario<Producto>` (`InventarioPotrero.cs:10-43`). La venta la sigue coordinando `Hacienda` y el guardado lo sigue haciendo `ResService` (`ResService.cs:116-133`).
-
-**LSP tensionado pero compensado.** Esta es la tensión más honesta del diseño. El contrato dice `Producto`, pero el adaptador solo funciona con `Res`: `ComoRes` rechaza cualquier otro producto y `contiene` devuelve falso. Un cliente que le pase un lácteo nota la diferencia. Lo que la contiene es que el adaptador se construye en un único sitio y solo para vender reses. No lo presentamos como un inventario de propósito general.
-
-**DIP neutro.** El adaptador implementa la misma abstracción que `Hacienda` ya consumía (`IInventario.cs:6-11`, `InventarioPotrero.cs:4-10`). No agrega ni quita dependencias concretas, y mantiene la incompatibilidad de tipos fuera de la biblioteca de dominio.
+Adapter fue descartado por reforzar en ejecución la precondición del inventario.
+La venta vigente usa `vender<T>(IInventario<T>, T, uint)`, que liga producto e
+inventario en compilación. No se atribuyen a Adapter efectos SOLID del diseño final.

@@ -11,7 +11,7 @@ AS-IS: `03-src/redisenado/HaciendaNEW/`. TO-BE: `05-reto2-patrones/04-src/active
 | **Patrón y punto de dolor que resuelve** | Factory Method, responde a P-01. `Potrero.anadir_res` arma un string en `Potrero.cs:53` y decide el subtipo con un switch en `Potrero.cs:90-101`. La misma decisión se repite en `PersistenciaService.cs:512-526` y `:571-574`, esta última con `_ => new Ternero(...)`: un tipo desconocido en disco vuelve convertido en ternero sin avisar. |
 | **Alternativas que evaluaron** | **No hacer nada:** mantener los cuatro switches sincronizados a mano. Se descarta porque añadir una categoría obliga a abrir 4 archivos y nada avisa si se olvida uno. **Abstract Factory:** descartada, `Res` y `Vacuna` varían por separado y no existe la regla de que un subtipo de res exija una familia de vacunas. **Fábrica única con switch:** descartada, mueve el condicional de sitio en vez de eliminarlo, que es el error que el enunciado nombra primero. |
 | **Qué sale y qué entra** | Sale: el switch de `Potrero.anadir_res` y los dos de `PersistenciaService`. Entran: `ICreadorRes` (Creator), `CreadorTernero`, `CreadorCebon` y `CreadorNovillo` (ConcreteCreator), y `CatalogoCreadoresRes` (Registry, resuelve por `AplicaA(edad)` en `CatalogoCreadoresRes.cs:38`). |
-| **Cómo se relaciona** | Los construye `p_mvcHacienda/Program.cs:74-78`; los consumidores sin contenedor usan `CatalogoCreadoresRes.PorDefecto()`. Los usan `Hacienda.anadir_res_potrero` (`Hacienda.cs:178`) y `PersistenciaService` (`:192`, `:602`, `:648`). Con Adapter: el potrero que envuelve `InventarioPotrero` contiene reses creadas por estos creadores. |
+| **Cómo se relaciona** | Los construye `p_mvcHacienda/Program.cs:74-78`; los consumidores sin contenedor usan `CatalogoCreadoresRes.PorDefecto()`. Los usan `Hacienda.anadir_res_potrero` (`Hacienda.cs:178`) y `PersistenciaService` (`:192`, `:602`, `:648`). La venta usa después el mismo dominio mediante `vender<T>`. |
 | **Impacto** | Creadas 5, modificadas 4 (`Hacienda`, `Potrero`, `PersistenciaService`, `Program`), eliminadas 0. Anexo B: SC-2 crea reses con chip por el mismo catálogo, sin tocar clientes. |
 | **Qué cuesta** | 5 clases más y un salto de indirección: quien lee `ParaEdad` no ve qué subtipo sale, tiene que abrir el creador. Depurar el alta de una res pasa de un switch a tres saltos. |
 | **Origen** | Idea propia. B-10 registra la corrección: el borrador traía Strategy y Chain of Responsibility, y los descartamos al ver el código. |
@@ -46,14 +46,9 @@ AS-IS: `03-src/redisenado/HaciendaNEW/`. TO-BE: `05-reto2-patrones/04-src/active
 
 ---
 
-## Ficha 4 — Adapter
+## Corrección de venta evaluada y descartada
 
-| Campo | Contenido |
-|---|---|
-| **Patrón y punto de dolor que resuelve** | Adapter, responde a P-07. En el AS-IS conviven dos caminos de venta y solo uno está vivo: `Hacienda.vender_res` (`Hacienda.cs:182`), llamado desde `ResService.cs:79`. El genérico `vender` no se puede usar para una res porque pide `IInventario<Producto>` y `Potrero` es `IInventario<Res>`; como `IInventario<T>` declara `agregar(T)` y `retirar(T)`, el genérico es invariante y la conversión no compila. |
-| **Alternativas que evaluaron** | **No hacer nada:** conservar `vender_res` y mantener los dos caminos. Se descarta porque toda regla de venta habría que escribirla dos veces. **Cambiar `IInventario<T>` a covariante en la biblioteca:** descartada, obliga a partir la interfaz en dos y `Bib_Hacienda` estaba fuera de alcance por decisión del equipo. **Duplicar el retiro y el registro de venta en `ResService`:** descartada, mete lógica de dominio en la capa web. |
-| **Qué sale y qué entra** | Sale: el método `Hacienda.vender_res`. Entra: `InventarioPotrero` (Adapter), que traduce `IInventario<Res>` a `IInventario<Producto>`. Vive en `p_mvcHacienda/Servicios/`, no en la biblioteca, porque la incompatibilidad es de tipos y no de negocio. |
-| **Cómo se relaciona** | Lo construye `ResService.cs:130` en cada venta. Lo usa `Hacienda.vender(IInventario<Producto>, Producto, uint)`. Con Factory Method: el potrero que envuelve contiene reses creadas por los creadores concretos. |
-| **Impacto** | Creadas 1, modificadas 1 (`ResService`), eliminadas 0 clases; desaparece el método `vender_res`. Anexo B: SC-1 vende un lácteo por el mismo `vender` genérico, sin un camino aparte. |
-| **Qué cuesta** | La conversión de `Producto` a `Res` se verifica en ejecución y no en compilación: si alguien pasa un lácteo, `InventarioPotrero` lanza. Es un chequeo que antes hacía el compilador. Además obliga a implementar `agregar(Producto)`, que el flujo de venta nunca llama. |
-| **Origen** | Propuesta de la herramienta, aceptada con la ubicación puesta por el equipo (B-05). B-11 registra la corrección posterior: lo declaramos patrón adoptado y no arreglo de compilación, porque está en el código entregado. |
+Adapter fue una alternativa para resolver la invariancia de `IInventario<T>`, pero
+se descartó. La implementación vigente usa `vender<T>(IInventario<T>, T, uint)`;
+`ResService` pasa `Potrero` y `Res` con el mismo tipo genérico. No hay una ficha
+de patrón adoptado para Adapter.
