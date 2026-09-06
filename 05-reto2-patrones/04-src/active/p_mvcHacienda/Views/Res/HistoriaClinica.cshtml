@@ -1,0 +1,137 @@
+@model Bib_Hacienda.Clases.HistoriaClinica
+@using Bib_Hacienda.Clases
+@{
+    ViewData["Title"] = $"Historia clínica - {ViewBag.NombreRes}";
+}
+<div class="container mt-4">
+    <div class="aw-page-header mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="display-6 fw-bold mb-1" style="color: var(--aw-text);">
+                Historia clínica de @ViewBag.NombreRes
+            </h1>
+            <p class="text-muted mb-0">Potrero: @ViewBag.PotreroId</p>
+        </div>
+        <a asp-action="Index" class="btn aw-btn aw-btn-secondary">
+            <span class="material-icons-outlined" style="font-size: 1.2rem; vertical-align: sub;">arrow_back</span>
+            Volver
+        </a>
+    </div>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-@TempData["TipoMensaje"] alert-dismissible fade show" role="alert">
+            <strong>@TempData["Mensaje"]</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <h2 class="h5 fw-bold mt-4 mb-3">Vacunas aplicadas</h2>
+    @if (Model.VacunasAplicadas.Any())
+    {
+        <div class="aw-card aw-reveal">
+            <div class="p-3">
+                <table class="table table-hover aw-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Lote</th>
+                            <th>Tipo</th>
+                            <th>Fecha Venc.</th>
+                            <th>Fecha Aplic.</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var v in Model.VacunasAplicadas)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@v.Nombre</td>
+                                <td>@v.Lote</td>
+                                <td>
+                                    @if (v is Bacteriana) { <span class="aw-badge aw-badge-info">Bacteriana</span> }
+                                    else { <span class="aw-badge aw-badge-warning">Viva</span> }
+                                </td>
+                                <td>@v.Fecha_vencimiento.ToString("yyyy-MM-dd")</td>
+                                <td>@v.Fecha_aplicacion.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    @if (v is Bacteriana b) { <span class="aw-badge aw-badge-secondary">@b.Periodo_aplicacion sem.</span> }
+                                    else if (v is Viva) { <span class="aw-badge aw-badge-secondary">Atenuada</span> }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info aw-card border-0 text-center py-4">
+            <h6 class="mb-0">No hay vacunas aplicadas para esta res.</h6>
+        </div>
+    }
+
+    <h2 class="h5 fw-bold mt-5 mb-3">Eventos clínicos</h2>
+    @if (Model.EventosClinicos.Any())
+    {
+        <div class="aw-card aw-reveal">
+            <div class="p-3">
+                <table class="table table-hover aw-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Concepto</th>
+                            <th>Observación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in Model.EventosClinicos.OrderBy(e => e.Fecha))
+                        {
+                            <tr>
+                                <td>@e.Fecha.ToString("yyyy-MM-dd")</td>
+                                <td class="fw-semibold">@e.Concepto</td>
+                                <td>@e.Observacion</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info aw-card border-0 text-center py-4">
+            <h6 class="mb-0">No hay eventos clínicos registrados para esta res.</h6>
+        </div>
+    }
+
+    <h2 class="h5 fw-bold mt-5 mb-3">Registrar evento clínico</h2>
+    <div class="aw-card aw-reveal">
+        <div class="p-3">
+            <form asp-action="RegistrarEvento" method="post">
+                <input type="hidden" name="potreroId" value="@ViewBag.PotreroId" />
+                <input type="hidden" name="nombreRes" value="@ViewBag.NombreRes" />
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Fecha</label>
+                        <input type="date" name="fecha" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Concepto</label>
+                        <input type="text" name="concepto" class="form-control" placeholder="Diagnóstico, tratamiento, revisión..." required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Observación</label>
+                        <input type="text" name="observacion" class="form-control" placeholder="Detalle del evento" required />
+                    </div>
+                </div>
+                <div class="mt-3 text-end">
+                    <button type="submit" class="btn aw-btn aw-btn-primary">
+                        <span class="material-icons-outlined" style="font-size: 1rem; vertical-align: sub;">add</span>
+                        Registrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
