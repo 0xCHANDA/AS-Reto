@@ -27,13 +27,13 @@ AS-IS: `03-src/redisenado/HaciendaNEW/`. TO-BE: `05-reto2-patrones/04-src/active
 
 | ID | Elemento | Estado | Qué hacía antes | Qué hace ahora | Quién dependía y cómo se reconecta |
 |---|---|---|---|---|---|
-| E-11 | Suscripciones `+=` dentro de métodos | Sale | Siete puntos: `Potrero.cs:112,118,124,130` y `Hacienda.cs:225,231,294`, nunca liberados | — | Se sustituyen por tres suscripciones en el constructor de `Hacienda` (`:84-86`) |
+| E-11 | Suscripciones `+=` dentro de métodos | Sale | Siete puntos: `Potrero.cs:112,118,124,130` y `Hacienda.cs:225,231,294`, nunca liberados | Las suscripciones son estables por ciclo de vida, no por operación | Tres publishers de `Hacienda` se conectan en su construcción; los cuatro de cada `Potrero` al incorporarlo. Las operaciones no agregan handlers |
 | E-12 | `IObservadorMensaje` | Entra | — | Un solo rol: `Recibir(mensaje)`, porque los seis publishers emiten un `string` | Lo implementa el recolector |
 | E-13 | `RecolectorMensajes` | Entra | — | Único observador. Guarda avisos solo mientras hay una captura abierta | Los publishers notifican a él en vez de a lambdas locales |
 | E-14 | `CapturaMensajes` | Entra | — | Delimita qué operación lee qué mensajes | Cada operación abre la suya, así ninguna lee los de otra |
-| E-15 | `PublisherPesoMin`, `PublisherPesoVenta`, `PublisherVacunacionCompletada` | Se transforma | Emitían a lambdas locales | Emiten al recolector | Suscritos en `Hacienda.cs:84-86`. El orden de emisión no cambia |
-| E-15b | `PublisherPotreroMitad`, `PublisherPotreroLleno` | Se transforma | Sus avisos llegaban a las lambdas de `Potrero.anadir_res` | Se instancian en `active/Potrero.cs:23-24` y nadie los escucha | Nadie. Sus avisos se pierden, igual que antes cuando el publisher no tenía suscriptores |
-| E-15c | `PublisherVacunaVencida` | Se transforma | Ya estaba sin uso | Se instancia en `active/Hacienda.cs:46` y nunca se suscribe ni se invoca | Nadie. Deuda declarada |
+| E-15a | Publishers de `Hacienda`: `PublisherPesoMin`, `PublisherPesoVenta`, `PublisherVacunacionCompletada` | Se transforma | Emitían a lambdas locales | Emiten al recolector | Suscritos una vez en la construcción de `Hacienda` (`Hacienda.cs:84-86`). El orden de emisión no cambia |
+| E-15b | Publishers de `Potrero`: `PublisherPotreroMitad`, `PublisherPotreroLleno`, `PublisherPesoMin`, `PublisherPesoVenta` | Se transforma | Emitían a lambdas locales de `Potrero.anadir_res` | Emiten al mismo recolector | `Potrero.Suscribir(...)` los conecta una vez al crear o incorporar un potrero (`Potrero.cs:38-44`; `Hacienda.cs:103-104` y `:126-127`) |
+| E-15c | `PublisherVacunaVencida` | Se transforma | Ya estaba sin uso | Se instancia en `Hacienda.cs:46` y nunca se suscribe ni se invoca | Nadie. Deuda declarada |
 
 ## Corrección de la venta (sin Adapter)
 
@@ -67,6 +67,6 @@ SC-3 endureció cuatro puntos que antes aceptaban cualquier cosa. Van declarados
 
 > Dos elementos quedan fuera de la tabla porque no cambian y esta tabla es de cambios. `ICreacionVacuna` sigue publicando sus cuatro firmas: Builder quitó el cuerpo duplicado, no el contrato, y eso queda como deuda declarada. `Potrero` implementa `IInventario<Res>` y `vender<T>` liga el inventario y el producto mediante el mismo `T`.
 
-> Sobre los publishers: el Observer del TO-BE cubre los tres avisos que `Hacienda` emite y los cuatro publishers de cada `Potrero`, suscritos una sola vez al crearlo. `publisher_vacuna_vencida` sigue sin suscriptor porque no participa en una salida observable caracterizada.
+> Sobre los publishers: el Observer del TO-BE cubre los tres avisos que `Hacienda` emite y los cuatro publishers de cada `Potrero`. `Hacienda.incorporar_potrero` suscribe el potrero antes de agregarlo al estado activo; por eso la misma invariante aplica a altas nuevas y a objetos restaurados. `PersistenciaService` solo reconstruye el objeto y no conoce Observer. `publisher_vacuna_vencida` sigue sin suscriptor porque no participa en una salida observable caracterizada.
 
 > Sobre `HistoriaClinica`: en el AS-IS (`03-src/redisenado/`) la clase no existe. Sí aparece, vacía y sin uso, en `05-reto2-patrones/04-src/baseline-input-2026-08-31/`, que es un snapshot intermedio y no el punto de partida de este reto.

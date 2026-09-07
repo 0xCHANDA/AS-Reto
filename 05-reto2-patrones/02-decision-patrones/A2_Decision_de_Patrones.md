@@ -33,7 +33,7 @@ Así, `Hacienda.anadir_res_potrero` deja de decidir el subtipo y solo pide `cata
 
 ## Observer — P-03
 
-Observer no nació en Reto 2: el AS-IS ya tenía publishers, eventos y suscripciones `+=`. El problema era su ciclo de vida. En el TO-BE, `Hacienda` se suscribe una vez en el constructor a `RecolectorMensajes`; `CapturaMensajes` delimita los avisos de cada operación. Esto evita acumulación de handlers y mezcla entre operaciones, conservando el orden de mensajes caracterizado.
+Observer no nació en Reto 2: el AS-IS ya tenía publishers, eventos y siete suscripciones `+=`. El problema era su ciclo de vida: las suscripciones locales se repetían dentro de operaciones y acumulaban handlers. En el TO-BE, `Hacienda` conecta una vez sus tres publishers al `RecolectorMensajes` durante la construcción; cada `Potrero` conecta sus cuatro publishers una vez al ser creado o incorporado tras restauración. `PersistenciaService` solo reconstruye el potrero y la reconexión ocurre en `Hacienda.incorporar_potrero`. `CapturaMensajes` delimita los avisos de cada operación, no crea handlers. `PublisherVacunaVencida` permanece sin observador porque no participa en una salida observable caracterizada.
 
 ## Corrección LSP de la venta
 

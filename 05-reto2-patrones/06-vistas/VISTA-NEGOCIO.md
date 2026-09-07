@@ -4,11 +4,11 @@ Para la Dirección de Ingeniería y para quien aprueba el presupuesto.
 
 ## En una frase
 
-El propósito de negocio se conserva, pero no se afirma equivalencia estricta: la comparación registra una diferencia estructural en C20. Lo que cambió principalmente es cuánto cuesta pedirle algo nuevo.
+El rediseño conserva el comportamiento previo caracterizado. C20 es una diferencia estructural deliberada, no una divergencia observable. Lo que cambió principalmente es cuánto cuesta pedirle algo nuevo.
 
 ## Qué tocamos y qué no
 
-Tocamos la forma en que las piezas internas del programa se llaman entre sí. No tocamos ninguna pantalla, ningún dato guardado, ninguna regla del negocio. Un empleado que use el sistema mañana no va a notar diferencia, salvo en un punto que explicamos más abajo y que hay que decidir.
+Tocamos la forma en que las piezas internas del programa se llaman entre sí. SC-3 introduce de forma autorizada la historia clínica, con `HistoriaClinica`, `EventoClinico`, persistencia de eventos clínicos y su vista de consulta. Fuera de esos cambios funcionales explícitamente autorizados, no se modificaron reglas de negocio ni salidas observables congeladas.
 
 Tampoco cambiamos la tecnología ni partimos el sistema en pedazos. Eso estaba fuera del encargo y sigue fuera.
 
@@ -28,11 +28,11 @@ También encontramos 219 líneas escritas para controlar quién puede hacer qué
 
 ## Qué gana el negocio
 
-**Tiempo de respuesta a una solicitud.** Después del cambio, agregar una categoría nueva de animal se hace registrándola en un solo sitio. Los otros once quedan enterados solos. Lo mismo con un aviso nuevo: un sitio en lugar de ocho.
+**Tiempo de respuesta a una solicitud.** La decisión de construcción dejó de repetirse en varios clientes. Una categoría compatible con la política de clasificación existente entra registrando un creador; si modifica esa política, también habrá que actualizar las reglas de dominio correspondientes. Las suscripciones de avisos ahora tienen puntos de ciclo de vida definidos: un aviso nuevo se conecta explícitamente en el punto que corresponde, en vez de agregar handlers dentro de cada operación.
 
 **Riesgo de romper algo.** Antes, olvidar uno de los doce sitios producía un error que aparecía días después y en un lugar que no tenía nada que ver con la causa. Ahora, si falta el registro, el sistema lo dice de inmediato y con un mensaje que nombra el problema.
 
-**Una red de seguridad.** Dejamos 92 comprobaciones automáticas y una comparación que pone lado a lado lo que el sistema respondía antes y lo que responde ahora. Cualquiera del equipo la corre en un minuto. Si alguien rompe algo, salta ahí y no en producción.
+**Una red de seguridad.** Dejamos 98 comprobaciones automáticas y una comparación que pone lado a lado lo que el sistema respondía antes y lo que responde ahora. Cualquiera del equipo la corre en un minuto. Si alguien rompe algo, salta ahí y no en producción.
 
 ## Qué costó
 
@@ -45,7 +45,7 @@ Eso tiene un precio real: leer el programa para entender cómo se crea un animal
 | Si pasa esto | Entonces | Cómo se enteran |
 |---|---|---|
 | Se agrega una categoría de animal y se olvida registrarla | El alta de animales de esa categoría falla | El sistema muestra un mensaje que dice que ninguna categoría cubre esa edad |
-| Se agrega un tipo de vacuna sin respetar el formato de los mensajes | Los textos que ve el usuario cambian sin que nadie lo pida | Una de las 92 comprobaciones falla al correrla |
+| Se agrega un tipo de vacuna sin respetar el formato de los mensajes | Los textos que ve el usuario cambian sin que nadie lo pida | Una de las 98 comprobaciones falla al correrla |
 | El archivo donde se guarda la historia clínica se daña | Se pierden eventos clínicos sin aviso | Después de reiniciar, la historia de un animal tiene menos registros de los que se guardaron |
 | Se intenta combinar un producto con un inventario incompatible | El código no compila | La firma genérica exige que inventario y producto usen el mismo tipo |
 

@@ -44,6 +44,8 @@ El codigo proviene de `p_mvcHacienda.zip` (SHA-256 `e3c45306a94f5473b4bab353265e
 
 La venta usa la firma genérica type-safe `vender<T>(IInventario<T>, T, uint)`. Adapter fue evaluado y descartado; no forma parte del conjunto adoptado.
 
+Observer ya existía parcialmente en el AS-IS mediante eventos. El TO-BE estabiliza el ciclo de vida: `Hacienda` conecta tres publishers propios durante construcción y conecta los cuatro publishers de cada `Potrero` antes de incorporarlo, tanto en alta como en restauración. `CapturaMensajes` solo delimita los avisos leídos por cada operación. `PublisherVacunaVencida` permanece sin suscriptor.
+
 Facade fue descartado como patrón nuevo en A2: `Hacienda` ya coordina parte del flujo y otra fachada duplicaría ese rol.
 
 ## Verificacion
@@ -59,7 +61,6 @@ La fuente activa implementa SC-3 Historia Clínica. Cada `Res` posee exactamente
 ## Pendientes abiertos
 
 - Definir la autorizacion relacionada con P-06 y la pregunta formal a la Lider Tecnica.
-- Resolver la diferencia observable de mensajes de venta.
 
 ## Build del baseline
 

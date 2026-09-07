@@ -12,7 +12,7 @@ Revisar `README.md`, el README de `05-reto2-patrones/`, A1/A2, el diseño A3 y l
 
 ## Cambio normal
 
-Para Reto 2, analizar primero el baseline y los artefactos A1/A2/A3. Las implementaciones evolutivas se realizan en `04-src/active/`, nunca en el baseline; preservar mensajes que el verificador cubre.
+Para Reto 2, analizar primero el baseline y los artefactos A1/A2/A3. Las implementaciones evolutivas se realizan en `04-src/active/`, nunca en el baseline; preservar mensajes que el verificador cubre. Los potreros reconstruidos se incorporan mediante `Hacienda.incorporar_potrero` para preservar la suscripción estable de Observer.
 
 ## Verificaciones
 

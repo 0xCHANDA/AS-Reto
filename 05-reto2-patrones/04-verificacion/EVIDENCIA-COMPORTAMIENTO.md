@@ -3,10 +3,9 @@
 ## Resultado
 
 La comparación confirma `MATCH` en C03 (alta de res), C04 (edad incompatible)
-y C18 (lectura de `L_ventas`). La diferencia vigente es C20, estructural: NEW
-separa `IValidarInformacion` en validadores específicos. No se afirma que AS-IS
-y TO-BE sean idénticos en todos los sentidos; la equivalencia se limita a los
-observables listados como `MATCH`.
+y C18 (lectura de `L_ventas`). Los casos caracterizados mantienen sus observables.
+C20 documenta una diferencia estructural deliberada del TO-BE, no una divergencia
+de comportamiento observable.
 
 | Caso | Antes · `03-src/redisenado/HaciendaNEW`                                                                                                                                       | Después · `04-src/active`                                                                                                                                                     |
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -45,8 +44,9 @@ observables listados como `MATCH`.
 | N08  | SC-3           | Cada res conserva su propia historia                                      | `HistoriaClinicaNoPuedeCompartirseEntreReses` `:760-771`      |
 | N09  | SC-3           | Una vacuna se registra una vez y no se duplica como evento                | `VacunaAplicadaSeRegistraUnaVezEnHistoria` `:676-688`         |
 | N10  | Builder        | El literal sin interpolar sobrevive al patrón                             | `LoteBacterianoConservaLiteralNombreSinInterpolar` `:315-325` |
+| N11  | Observer       | Un potrero reconstruido se incorpora suscrito una vez y conserva orden y mensajes únicos | `PotreroCargadoQuedaSuscritoUnaSolaVez` |
 
 ```text
-Verificaciones ejecutadas: 92
+Verificaciones ejecutadas: 98
 TODAS LAS VERIFICACIONES PASARON.
 ```

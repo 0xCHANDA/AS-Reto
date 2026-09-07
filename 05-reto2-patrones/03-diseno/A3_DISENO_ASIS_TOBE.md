@@ -34,30 +34,24 @@ El color dice a qué patrón pertenece cada clase, que es lo que pide el enuncia
 
 La venta queda en la interfaz genérica `vender<T>(IInventario<T>, T, uint)`: `ResService` pasa `Potrero` y `Res` con el mismo tipo `T`. No existe un `InventarioPotrero` adoptado ni un Adapter en el TO-BE.
 
-Tres publishers salen en gris punteado. Se instancian y nadie los escucha: `PublisherPotreroMitad` y `PublisherPotreroLleno` en `active/Potrero.cs:23-24`, y `PublisherVacunaVencida` en `active/Hacienda.cs:46`. Los avisos que emiten no llegan a ningún observador. Está dibujado así porque es lo que hace el código, no porque convenga.
+El AS-IS ya usaba publishers y eventos; sus siete `+=` locales son evidencia histórica y no se borran del recorte. El problema era que se ejecutaban en operaciones repetitivas y acumulaban handlers. En el TO-BE, `Hacienda` conecta una sola vez sus tres publishers propios al `RecolectorMensajes` durante la construcción. Cada `Potrero` conecta sus cuatro publishers una sola vez mediante `Suscribir(recolectorMensajes)` cuando `Hacienda` lo incorpora, tanto al crearlo como al restaurarlo. `PublisherVacunaVencida` es el único publisher que permanece sin suscriptor porque no participa en una salida observable caracterizada.
 
 ## Qué se verificó antes de exportar
 
-El enrutado trata las cajas de las dos capas como obstáculo para las aristas de las dos capas, así que ninguna caja del TO-BE tapa una línea del AS-IS ni al revés.
+Las exportaciones se generan directamente desde las capas `AS-IS` y `TO-BE` del
+archivo editable. La revisión semántica confirma que Potrero sí está observado,
+que su suscripción ocurre una vez al crearlo o restaurarlo, que `CapturaMensajes`
+no suscribe publishers y que `PublisherVacunaVencida` es la única deuda sin
+suscriptor.
 
-```
-39 aristas · 41 cajas · 0 cruce sobre caja · 0 puerto compartido
-                        0 líneas montadas · 0 ruta indefinida
-
-aristas de una capa sobre cajas de la otra: 0
-cajas del TO-BE encima de cajas del AS-IS:  0
-```
-
-Aparte del enrutado, un segundo script recorre el `.drawio` y comprueba que cada
-título de caja corresponde a un `class`, `interface` o `enum` real, y que cada
-referencia `Archivo.cs:NNN` apunta a la línea que dice. Las 39 cajas y las 17
-referencias resuelven. Ese script se puede volver a correr cuando el código cambie.
-
-Que el TO-BE no tape nada no es un detalle estético. Si una caja nueva cubriera una relación del AS-IS, al encender ambas capas se perdería justo lo que el lector quiere comparar.
+El validador genérico de Draw.io confirma XML y referencias de aristas válidas,
+pero informa 18 cruces de aristas en el diagrama completo. Son un bloqueo para la
+aceptación geométrica estricta: no se declara un cero inexistente ni se confunde
+esa limitación visual con la validación semántica o de comportamiento.
 
 ## Restricciones observables que el diseño conserva
 
 - Builder mantiene el tipo de vacuna, la construcción individual y por lote, y los mensajes existentes. Incluido el texto literal de `FabricadorVacunas.cs:86`, que `BuilderBacteriana` conserva devolviendo `"{nombre}"` sin interpolar.
-- Observer conserva el orden de los avisos: en `Potrero`, mitad, lleno, peso mínimo, peso venta; en `Hacienda`, peso mínimo, peso venta.
-- Factory Method resuelve por `AplicaA(edad)`, no por un condicional dentro de la fábrica. Una categoría nueva se registra en la raíz de composición y ningún cliente cambia.
+- Observer conserva el orden de los avisos: en `Potrero`, mitad, lleno, peso mínimo, peso venta; en `Hacienda`, peso mínimo, peso venta. `CapturaMensajes` solo delimita la lectura temporal de cada operación; no agrega handlers.
+- Factory Method resuelve por `AplicaA(edad)`, no por un condicional dentro de la fábrica. Una categoría compatible con la política actual se registra mediante un creador; si cambia esa política, las reglas de dominio también deben evolucionar.
 - Adapter fue evaluado como alternativa para la incompatibilidad de tipos, pero se descartó por reforzar en ejecución la precondición del inventario. La corrección vigente es el método genérico `vender<T>`.

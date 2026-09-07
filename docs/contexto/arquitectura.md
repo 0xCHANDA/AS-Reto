@@ -35,7 +35,7 @@ Entrega académica de modernización de Hacienda: conserva material AS-IS y un r
 
 ## Flujo principal de datos/control
 
-`p_mvcHacienda/Program.cs` configura DI, validadores/proxies, persistencia, catálogo de creadores y una instancia de `Hacienda`; luego los controllers usan servicios de aplicación. `Hacienda` coordina operaciones del dominio con `RegistroVenta`, `FabricadorVacunas`, `CatalogoCreadoresRes`, potreros y eventos.
+`p_mvcHacienda/Program.cs` configura DI, validadores/proxies, persistencia, catálogo de creadores y una instancia de `Hacienda`; luego los controllers usan servicios de aplicación. Al restaurar potreros, `Program` los entrega a `Hacienda.incorporar_potrero`, que los conecta al recolector de mensajes antes de activarlos. `Hacienda` coordina operaciones del dominio con `RegistroVenta`, `FabricadorVacunas`, `CatalogoCreadoresRes`, potreros y eventos.
 
 ## Dependencias relevantes
 

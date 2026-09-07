@@ -15,7 +15,7 @@
 |---|---|---|---|---|---|
 | Factory Method | Refuerza | Refuerza | Neutro | Refuerza | Tensionado pero compensado |
 | Builder | Refuerza | Refuerza | Refuerza | Refuerza | Tensionado pero compensado |
-| Observer | Refuerza | Refuerza | Neutro | Refuerza | Tensionado pero compensado |
+| Observer | Refuerza | Refuerza parcialmente | Neutro | Refuerza | Tensionado pero compensado |
 
 ## Factory Method — P-01
 
@@ -43,11 +43,11 @@
 
 **SRP refuerza.** Los publishers producen avisos y `RecolectorMensajes` los guarda mientras dura una operación (`RecolectorMensajes.cs:10-39`, `Hacienda.cs:229-305`). El recolector no sabe nada de pesos ni de esquemas de vacunación. Solo recibe cadenas.
 
-**OCP refuerza.** Agregar otro consumidor de avisos no obliga a tocar `Hacienda`: se suscribe al evento que ya existe. Las suscripciones estables ocurren una sola vez, en el constructor (`Hacienda.cs:82-87`).
+**OCP refuerza parcialmente.** El ciclo de vida de los handlers deja de estar disperso en operaciones y queda concentrado en puntos estables: la construcción de `Hacienda` y la incorporación de `Potrero`. Un publisher existente puede reutilizar el mecanismo; incorporar uno nuevo puede requerir conectarlo explícitamente en el punto de composición correspondiente.
 
 **ISP refuerza.** `IObservadorMensaje` tiene un método, `Recibir(string)`. No hay forma de hacerlo más pequeño.
 
-**DIP tensionado pero compensado.** `Hacienda` guarda un `RecolectorMensajes` concreto, y los publishers siguen usando delegados propios en lugar de una abstracción común. La tensión no sale de la frontera de eventos: el recolector implementa `IObservadorMensaje`, la suscripción ocurre una vez, y el arnés comprueba que el número de handlers no crece y que una operación no lee los avisos de otra.
+**DIP tensionado pero compensado.** `Hacienda` guarda un `RecolectorMensajes` concreto, `Potrero.Suscribir` recibe ese tipo concreto y los publishers usan delegados propios en lugar de una abstracción común. `IObservadorMensaje` separa la responsabilidad de recibir mensajes, las suscripciones se concentran por ciclo de vida y el arnés comprueba que los handlers no crecen ni se mezclan entre operaciones. No se presenta como DIP perfecto.
 
 ## Corrección de tipos en la venta
 

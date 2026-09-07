@@ -6,7 +6,7 @@ Todas las rutas salen de `05-reto2-patrones/04-src/active/`.
 
 ## Dónde se ensambla todo
 
-`p_mvcHacienda/Program.cs`. Ese archivo es la única raíz de composición: es el sitio donde se decide qué implementación concreta usa cada cosa. Ningún otro archivo debería instanciar colaboradores del dominio.
+`p_mvcHacienda/Program.cs` es la raíz de composición del flujo MVC activo: allí se decide la configuración principal. Persisten constructores y fábricas por defecto dentro del dominio, como `new RegistroVenta()`, `new FabricadorVacunas(...)` y `CatalogoCreadoresRes.PorDefecto()`, por compatibilidad con consumidores legacy y con el arnés de verificación; no deben confundirse con la configuración principal de producción.
 
 Tres bloques importan:
 
@@ -40,19 +40,19 @@ Cómo se relacionan entre sí: Factory Method crea las reses que luego usa la ve
 
 | Quiero... | Crear | Modificar | No tocar |
 |---|---|---|---|
-| **Agregar una categoría de res** (por ejemplo un toro reproductor) | Una clase `Res` hija y su `ICreadorRes` en `Clases/Creacion/` | `Program.cs:74-78` para registrar el creador nuevo | `Potrero`, `Hacienda`, `PersistenciaService`. Si te ves modificándolos, el creador está mal hecho |
+| **Agregar una categoría de res** (por ejemplo un toro reproductor) | Una clase `Res` hija y su `ICreadorRes` en `Clases/Creacion/` | `Program.cs:74-78` para registrar el creador nuevo | Para una categoría compatible con las fronteras actuales, no cambiar otros puntos. Si cambia la clasificación por edad o una regla de persistencia/potrero, esos puntos deben evolucionar explícitamente |
 | **Agregar un tipo de vacuna** | Una clase `Vacuna` hija y su `IVacunaBuilder` en `Clases/Construccion/` | `enum/TipoVacuna.cs` y `Interfaces/ICreacionVacuna.cs`, que sigue publicando cuatro firmas | El Director `FabricadorVacunas`. Si tienes que tocarlo, el builder no está cumpliendo el contrato |
 | **SC-1 · vender un producto derivado** (lácteo, carne, piel) | Un `IInventario<Producto>` para ese producto, o reusar `InventarioCarnes` / `InventarioLacteos` / `InventarioPieles`, que existen pero **nadie instancia** | `Program.cs` para registrarlo y `VentaService` para exponerlo | `Hacienda.vender`, que ya es genérico. No hace falta una vía nueva de venta |
-| **SC-2 · poner chips de geolocalización** | Un publisher para el aviso de posición, en `Eventos/` | `Res` para el identificador del chip, `PersistenciaService` para guardarlo, y `Hacienda.cs:84-86` para suscribir el publisher nuevo | El resto de los publishers y `RecolectorMensajes`. Un observador nuevo se suscribe, no se modifica |
+| **SC-2 · poner chips de geolocalización** | Un publisher para el aviso de posición, en `Eventos/` | `Res` para el identificador del chip, `PersistenciaService` para guardarlo y el punto de composición del publisher | El resto de los publishers y `RecolectorMensajes`. Un publisher de `Hacienda` se conecta en su construcción; uno de `Potrero`, en `Potrero.Suscribir(...)` |
 | **SC-3 · ampliar la historia clínica** | Nada, si es un evento más. `EventoClinico` ya acepta fecha, concepto y observación | `Views/Res/HistoriaClinica.cshtml` si hay que mostrarlo distinto | `HistoriaClinica.RegistrarVacuna`. Las vacunas se registran como vacunas, no como eventos |
-| **Agregar un aviso nuevo** | Un publisher en `Eventos/` | `Hacienda.cs:84-86` para suscribirlo al recolector | Los publishers existentes. Y ojo: emitir sin suscribir hace que el aviso se pierda en silencio |
+| **Agregar un aviso nuevo** | Un publisher en `Eventos/` | Si es propiedad de `Hacienda`, suscribir durante su construcción; si es de `Potrero`, incorporarlo a `Potrero.Suscribir(...)` | Nunca agregar `+=` dentro de una operación. Emitir sin suscribir hace que el aviso se pierda en silencio |
 | **Cambiar dónde se guardan los datos** | Una implementación nueva de los puertos de persistencia | `Program.cs` para registrarla | `PersistenciaService`, que se reemplaza entero. Los puertos viven en `Bib_Hacienda/Interfaces/` y en `p_mvcHacienda/Servicios/IPersistenciaEventosClinicos.cs` |
 
 ## Reglas que no se deben romper
 
 **El catálogo no lleva condicionales.** `CatalogoCreadoresRes.ParaEdad` resuelve preguntando a cada creador si aplica. El día que alguien meta un `switch` ahí, volvemos al problema que este trabajo vino a resolver: cada categoría nueva obligaría a modificar el catálogo.
 
-**Las suscripciones se hacen una vez al construir `Hacienda` o al crear un `Potrero`, nunca dentro de una operación.** `Hacienda` vive como singleton mientras dure el proceso. Un `+=` dentro de un método agrega un handler en cada llamada y los avisos empiezan a duplicarse. Así estaba antes y así se rompía.
+**Las suscripciones se hacen una vez según el ciclo de vida del publisher, nunca dentro de una operación.** Los publishers de `Hacienda` se conectan durante su construcción. Los de cada `Potrero` se conectan mediante `Potrero.Suscribir(...)` durante su alta o restauración, antes de que `Hacienda.incorporar_potrero(...)` lo agregue al estado activo. `PersistenciaService` solo reconstruye el potrero. Un `+=` dentro de un método repetitivo agrega handlers y duplica avisos.
 
 **El literal roto de `FabricadorVacunas.cs:86` se conserva a propósito.** El resumen del lote bacteriano imprime `- Nombre: {nombre}` sin interpolar, porque falta un `$`. Es salida observable y está congelada. `BuilderBacteriana.NombreEnResumenDeLote` devuelve `"{nombre}"` para preservarlo. No lo arregles sin autorización: hay una prueba que falla si lo haces, y está puesta a propósito.
 
@@ -61,7 +61,7 @@ Cómo se relacionan entre sí: Factory Method crea las reses que luego usa la ve
 **Antes de dar por bueno un cambio, corre las dos verificaciones.**
 
 ```bash
-dotnet run --project 04-src/HaciendaReto2.Verification          # 92 controles
+dotnet run --project 04-src/HaciendaReto2.Verification          # 98 controles
 cd 04-verificacion/caracterizacion                              # salidas antes/después
 dotnet run --project Caracterizacion.AsIs  > SALIDA-ASIS.txt
 dotnet run --project Caracterizacion.ToBe  > SALIDA-TOBE.txt

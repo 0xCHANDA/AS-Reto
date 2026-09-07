@@ -100,7 +100,7 @@ namespace p_mvcHacienda
                     var potreros = persistencia.CargarPotreros();
                     foreach (var potrero in potreros)
                     {
-                        hacienda.L_potreros.Add(potrero);
+                        hacienda.incorporar_potrero(potrero);
                     }
 
                     persistencia.CargarReses(hacienda.L_potreros);

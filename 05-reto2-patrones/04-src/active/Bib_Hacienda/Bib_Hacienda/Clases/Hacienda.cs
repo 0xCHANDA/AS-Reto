@@ -101,8 +101,7 @@ namespace Bib_Hacienda.Clases
                 }
 
                 Potrero nuevo_potrero = new Potrero(indentificacion, tipo_potrero);
-                nuevo_potrero.Suscribir(recolectorMensajes);
-                l_potreros.Add(nuevo_potrero);
+                incorporar_potrero(nuevo_potrero);
 
                 return ($"El potrero {indentificacion} se a añadido a la hacienda. ");
 
@@ -111,6 +110,23 @@ namespace Bib_Hacienda.Clases
             {
                 throw new Exception("Error inesperado en el metodo crear_potrero: " + er.Message);
             }
+        }
+
+        // La Hacienda mantiene la invariante de que un potrero activo ya tiene
+        // conectados sus publishers al recolector antes de poder usarse.
+        public void incorporar_potrero(Potrero potrero)
+        {
+            if (potrero == null)
+                throw new ArgumentNullException(nameof(potrero));
+
+            if (l_potreros.Any(p => ReferenceEquals(p, potrero) ||
+                p.Identificacion.Equals(potrero.Identificacion, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new InvalidOperationException($"Ya existe un potrero con el nombre '{potrero.Identificacion}'.");
+            }
+
+            potrero.Suscribir(recolectorMensajes);
+            l_potreros.Add(potrero);
         }
 
         //Metodo para buscar potreros por el nombre

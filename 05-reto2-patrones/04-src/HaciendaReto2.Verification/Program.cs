@@ -62,6 +62,7 @@ namespace HaciendaReto2.Verification
             AplicarVacunaInformaEsquemaCompleto();
 
             SuscripcionNoCreceConLasLlamadas();
+            PotreroCargadoQuedaSuscritoUnaSolaVez();
             CapturaConservaElOrdenDeEmision();
             CapturaAislaOperacionesEntreSi();
 
@@ -568,6 +569,42 @@ namespace HaciendaReto2.Verification
 
             AssertEqual(1, ContarSuscriptores(vacunada, "publisher_vacunacion_completa", "evt_vacunacion_completada"),
                 "evt_vacunacion_completada conserva un solo handler tras varias aplicaciones");
+        }
+
+        private static void PotreroCargadoQuedaSuscritoUnaSolaVez()
+        {
+            var hacienda = new Hacienda();
+            var potrero = new Potrero("P-R", l_tipos_potreros.ternero);
+            hacienda.incorporar_potrero(potrero);
+
+            AssertEqual(1, ContarSuscriptores(potrero, "publisher_potrero_mitad", "evt_potrero_mitad"),
+                "un potrero restaurado conecta una vez el aviso de capacidad media");
+            AssertEqual(1, ContarSuscriptores(potrero, "publisher_potrero_lleno", "evt_potrero_lleno"),
+                "un potrero restaurado conecta una vez el aviso de capacidad llena");
+            AssertEqual(1, ContarSuscriptores(potrero, "publisher_peso_min", "evt_peso_min"),
+                "un potrero restaurado conecta una vez el aviso de peso minimo");
+            AssertEqual(1, ContarSuscriptores(potrero, "publisher_peso_venta", "evt_peso_venta"),
+                "un potrero restaurado conecta una vez el aviso de peso de venta");
+
+            ushort mitad = (ushort)(ReglaPotrero.max_reses_potrero / 2);
+            for (int i = 1; i < mitad; i++)
+            {
+                hacienda.anadir_res_potrero("P-R", $"Restaurada{i}", 6, 200);
+            }
+
+            AssertEqual(
+                $"La res Restaurada{mitad} ha sido añadida al potrero P-R con exito.\n" +
+                "[Evento] El potrero 'P-R' ha alcanzado la mitad de su capacidad máxima de reses.\n" +
+                $"[Evento] La res 'Restaurada{mitad}' tiene un peso 100, está en desnutrición.",
+                hacienda.anadir_res_potrero("P-R", $"Restaurada{mitad}", 6, 100),
+                "un potrero restaurado conserva el orden de sus avisos y los entrega una vez");
+
+            ushort siguiente = (ushort)(mitad + 1);
+            AssertEqual(
+                $"La res Restaurada{siguiente} ha sido añadida al potrero P-R con exito.\n" +
+                $"[Evento] La res 'Restaurada{siguiente}' tiene un peso 100, está en desnutrición.",
+                hacienda.anadir_res_potrero("P-R", $"Restaurada{siguiente}", 6, 100),
+                "repetir altas sobre un potrero restaurado no duplica handlers");
         }
 
         // El orden de los avisos es observable: la captura los entrega en el

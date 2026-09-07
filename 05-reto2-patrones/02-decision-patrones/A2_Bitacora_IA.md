@@ -7,7 +7,7 @@
 | B-03 | Aplicar Factory Method | Aceptada con alcance | `ICreadorRes` y creadores concretos existen; `CatalogoCreadoresRes` se documenta como registro/resolvedor. |
 | B-04 | Aplicar Builder | Aceptada con deuda | `FabricadorVacunas` centraliza proceso; `ICreacionVacuna` conserva cuatro firmas. |
 | B-05 | Corregir el `$` faltante | Rechazada | Se conserva por compatibilidad observable y se declara el seam en `IVacunaBuilder`. |
-| B-06 | Tratar Observer como patrón nuevo | Corregida | El AS-IS ya tenía eventos y `+=`; el TO-BE mueve suscripción al constructor y delimita captura. |
+| B-06 | Tratar Observer como patrón nuevo | Corregida | El AS-IS ya tenía eventos y `+=`; el equipo corrigió esa lectura. El TO-BE estabiliza tres suscripciones de `Hacienda` y cuatro por `Potrero`, y usa captura solo para delimitar lectura. |
 | B-07 | Relacionar P-01/P-03 con SC-2 | Rechazada | SC-2 no exige nuevo subtipo ni alerta; las relaciones se retiraron de la priorización. |
 | B-08 | Relacionar P-04/P-05 con SC-3 | Corregida | La relación es indirecta: SC-3 agrega historia clínica, no tipos de vacuna. |
 | B-09 | Adoptar Adapter para venta | Rechazada | `InventarioPotrero` reforzaba la precondición de `IInventario<Producto>` a `Res`, incumpliendo LSP. |
