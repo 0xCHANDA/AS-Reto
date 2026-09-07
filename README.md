@@ -1,7 +1,7 @@
 # Modernización arquitectónica — Hacienda
 
 ## video reto 1 : https://youtu.be/H6Cqil-Go38
-## video reto 2: https://youtu.be/5u59KWKtzqo
+## video reto 2 : [https://youtu.be/5u59KWKtzqo](https://youtu.be/X0ciyuPIWRI)
 
 Este repositorio contiene la entrega del reto de Arquitectura de Software. Está organizado por fases para que cada requisito de la rúbrica tenga una ubicación clara.
 
