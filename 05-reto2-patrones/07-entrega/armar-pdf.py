@@ -79,25 +79,36 @@ def md_a_html(md, id_sec):
         out.append('<p>' + en_linea(' '.join(par)) + '</p>')
     return '\n'.join(out)
 
+def diagramas_uml():
+    return ('<figure><img src="../03-diseno/diagramas/A3-ASIS.png" '
+            'alt="UML AS-IS"><figcaption>UML AS-IS</figcaption></figure>'
+            '<figure><img src="../03-diseno/diagramas/A3-TOBE.png" '
+            'alt="UML TO-BE"><figcaption>UML TO-BE</figcaption></figure>')
+
 CSS = """
-@page { size: A4; margin: 18mm 15mm 20mm 15mm; }
-body { font: 10pt/1.45 -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #111; }
-h1 { font-size: 17pt; margin: 0 0 10pt; padding-bottom: 5pt; border-bottom: 2px solid #333; page-break-after: avoid; }
-h2 { font-size: 12.5pt; margin: 14pt 0 5pt; page-break-after: avoid; }
-h3 { font-size: 11pt; margin: 11pt 0 4pt; page-break-after: avoid; }
-p, li { margin: 0 0 5pt; }
-code { font: 8.6pt 'SF Mono', Menlo, monospace; background: #f2f2f2; padding: 0 2px; border-radius: 2px; }
+@page { size: A4; margin: 18mm 15mm 20mm 15mm;
+        @bottom-center { content: counter(page); font-size: 9pt; } }
+body { font: 8.5pt/1.25 -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #111; }
+h1 { font-size: 15pt; margin: 0 0 7pt; padding-bottom: 4pt; border-bottom: 2px solid #333; page-break-after: avoid; }
+h2 { font-size: 11pt; margin: 9pt 0 4pt; page-break-after: avoid; }
+h3 { font-size: 9.5pt; margin: 7pt 0 3pt; page-break-after: avoid; }
+p, li { margin: 0 0 3pt; }
+code { font: 7.4pt 'SF Mono', Menlo, monospace; background: #f2f2f2; padding: 0 2px; border-radius: 2px; }
 pre { font: 8.2pt/1.35 'SF Mono', Menlo, monospace; background: #f7f7f7; border-left: 2px solid #bbb;
       padding: 5pt 7pt; white-space: pre-wrap; word-break: break-word; page-break-inside: avoid; }
-table { border-collapse: collapse; width: 100%; margin: 6pt 0; font-size: 8.2pt; }
-th, td { border: 1px solid #ccc; padding: 3pt 4pt; text-align: left; vertical-align: top; word-break: break-word; }
+table { border-collapse: collapse; width: 100%; margin: 4pt 0; font-size: 7pt; }
+th, td { border: 1px solid #ccc; padding: 2pt 3pt; text-align: left; vertical-align: top; word-break: break-word; }
 th { background: #ececec; font-weight: 600; }
 tr { page-break-inside: avoid; }
 blockquote { margin: 6pt 0; padding-left: 8pt; border-left: 2px solid #999; color: #444; }
-.seccion { page-break-before: always; }
+.seccion { page-break-before: auto; }
 #portada { text-align: center; padding-top: 70mm; }
 #portada h1 { border: 0; font-size: 24pt; }
+#indice { page-break-before: always; }
 #indice ol { font-size: 10.5pt; line-height: 1.9; }
+figure { margin: 8pt 0; page-break-inside: avoid; text-align: center; }
+figure img { max-width: 100%; max-height: 55mm; object-fit: contain; }
+figcaption { font-size: 8.5pt; margin-top: 3pt; }
 """
 
 def main():
@@ -113,7 +124,10 @@ def main():
         md = open(p, encoding='utf-8').read()
         md = re.sub(r'^# .*\n', '', md, count=1)          # el H1 propio lo reemplaza el titulo de seccion
         indice.append(f'<li>{html.escape(titulo)}</li>')
-        cuerpo.append(f'<div class="seccion" id="s{n}"><h1>{html.escape(titulo)}</h1>{md_a_html(md, n)}</div>')
+        contenido = md_a_html(md, n)
+        if ruta == '03-diseno/A3_DISENO_ASIS_TOBE.md':
+            contenido += diagramas_uml()
+        cuerpo.append(f'<div class="seccion" id="s{n}"><h1>{html.escape(titulo)}</h1>{contenido}</div>')
         print(f'  {n:2}. {titulo}')
     indice.append('</ol></div>')
     doc = (f'<!doctype html><meta charset="utf-8"><title>Reto 2</title><style>{CSS}</style>'

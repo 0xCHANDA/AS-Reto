@@ -35,6 +35,14 @@ namespace Bib_Hacienda.Clases
             this.tipo_potrero = tipo_potrero;
         }
 
+        public void Suscribir(RecolectorMensajes recolector)
+        {
+            publisher_potrero_mitad.evt_potrero_mitad += recolector.Recibir;
+            publisher_potrero_lleno.evt_potrero_lleno += recolector.Recibir;
+            publisher_peso_min.evt_peso_min += recolector.Recibir;
+            publisher_peso_venta.evt_peso_venta += recolector.Recibir;
+        }
+
         public void agregar(Res producto){
     if (producto == null)
         throw new ArgumentNullException(nameof(producto));
@@ -68,11 +76,11 @@ namespace Bib_Hacienda.Clases
         _ => false
     };
 
-    if (!edadValida)
-    {
-        throw new InvalidOperationException(
-            $"La edad de la res no corresponde al tipo de potrero {tipo_potrero}.");
-    }
+        if (!edadValida)
+        {
+            throw new Exception(
+                $"Error inesperado en el metodo anadir_res: La res no puede ser añadida al potrero {identificacion} porque su edad no corresponde al tipo de potrero");
+        }
 
     // Agregar
     l_reses.Add(producto);

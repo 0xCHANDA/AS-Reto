@@ -47,23 +47,14 @@ Eso tiene un precio real: leer el programa para entender cómo se crea un animal
 | Se agrega una categoría de animal y se olvida registrarla | El alta de animales de esa categoría falla | El sistema muestra un mensaje que dice que ninguna categoría cubre esa edad |
 | Se agrega un tipo de vacuna sin respetar el formato de los mensajes | Los textos que ve el usuario cambian sin que nadie lo pida | Una de las 92 comprobaciones falla al correrla |
 | El archivo donde se guarda la historia clínica se daña | Se pierden eventos clínicos sin aviso | Después de reiniciar, la historia de un animal tiene menos registros de los que se guardaron |
-| Se intenta vender algo que no es un animal por la vía de los potreros | La venta falla en ese momento | El sistema muestra que un potrero solo admite reses |
+| Se intenta combinar un producto con un inventario incompatible | El código no compila | La firma genérica exige que inventario y producto usen el mismo tipo |
 
 El más caro de la lista es el de la historia clínica, porque los datos perdidos no se recuperan. Por eso conviene revisar ese archivo cuando se haga una copia de seguridad.
 
-## Una cosa que cambió y hay que decidir
-
-Al ordenar el sistema de avisos, **se perdió una advertencia**. Antes, al registrar un animal con poco peso, el sistema respondía con el mensaje de alta y además avisaba que estaba en desnutrición. Ahora responde solo con el mensaje de alta.
-
-La información no se perdió: el peso sigue guardado y visible. Lo que se perdió es la advertencia automática en ese momento.
-
-Recuperarla es trabajo de unas horas, pero implica cambiar lo que el sistema responde, y ese tipo de cambio necesita autorización. **No lo hicimos por nuestra cuenta.** Lo dejamos anotado y lo traemos aquí para que se decida.
-
 ## Qué necesitamos del negocio
 
-1. **Una decisión sobre esa advertencia.** ¿Se restaura o se deja como está? Si se restaura, necesitamos la autorización para cambiar lo que el sistema responde al registrar un animal.
-2. **Una decisión sobre los permisos.** Hay 219 líneas escritas para controlar quién puede vender, quién puede vacunar y quién solo puede consultar, y no están conectadas. Antes de conectarlas hay que saber si el negocio quiere que el sistema empiece a negar operaciones que hoy permite, porque el día que se conecten habrá gente que deje de poder hacer cosas.
-3. **Una persona que valide las salidas.** Cuando cambiemos algo que el usuario ve, necesitamos a alguien del negocio que confirme que el texto nuevo dice lo que debe decir.
+1. **Una decisión sobre los permisos.** Hay 219 líneas escritas para controlar quién puede vender, quién puede vacunar y quién solo puede consultar, y no están conectadas. Antes de conectarlas hay que saber si el negocio quiere que el sistema empiece a negar operaciones que hoy permite, porque el día que se conecten habrá gente que deje de poder hacer cosas.
+2. **Una persona que valide las salidas.** Cuando cambiemos algo que el usuario ve, necesitamos a alguien del negocio que confirme que el texto nuevo dice lo que debe decir.
 
 ## Qué pasa si no se sigue
 

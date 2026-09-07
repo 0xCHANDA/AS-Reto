@@ -43,4 +43,4 @@ La alternativa mínima es type-safe: `IVenta.vender<T>(IInventario<T>, T, uint) 
 
 ## SC-3 y coherencia documental
 
-SC-3 agrega `HistoriaClinica` a cada `Res`, con `VacunasAplicadas` y `EventosClinicos` separados. Aplicar vacuna no duplica el hecho como evento. No se vincula falsamente con P-04/P-05: ampliar una historia clínica no exige crear clases de vacuna. El diagrama A3 es histórico y declara que no representa retrospectivamente SC-3; la fuente activa y `HaciendaReto2.Verification` son la evidencia vigente.
+SC-3 agrega `HistoriaClinica` a cada `Res`, con `VacunasAplicadas` y `EventosClinicos` separados. Aplicar vacuna no duplica el hecho como evento. No se vincula falsamente con P-04/P-05: ampliar una historia clínica no exige crear clases de vacuna. El diagrama A3 representa SC-3 como composición de dominio, no como patrón; la fuente activa y `HaciendaReto2.Verification` son la evidencia vigente.

@@ -65,8 +65,8 @@ SC-3 endureció cuatro puntos que antes aceptaban cualquier cosa. Van declarados
 | `new Res(..., historiaClinica: null)` | Aceptaba, el campo quedaba muerto | `ArgumentNullException` |
 | Compartir una historia entre dos reses | Aceptaba en silencio | `InvalidOperationException` |
 
-> Dos elementos quedan fuera de la tabla porque no cambian y esta tabla es de cambios. `ICreacionVacuna` sigue publicando sus cuatro firmas: Builder quitó el cuerpo duplicado, no el contrato, y eso queda como deuda declarada. `IInventario<Producto>` es byte a byte el mismo archivo; lo que cambia es que ahora tiene un implementador que acepta potreros.
+> Dos elementos quedan fuera de la tabla porque no cambian y esta tabla es de cambios. `ICreacionVacuna` sigue publicando sus cuatro firmas: Builder quitó el cuerpo duplicado, no el contrato, y eso queda como deuda declarada. `Potrero` implementa `IInventario<Res>` y `vender<T>` liga el inventario y el producto mediante el mismo `T`.
 
-> Sobre los publishers sin observador: el Observer del TO-BE cubre los tres avisos que `Hacienda` emite. Los cuatro publishers que `Potrero` instancia y `publisher_vacuna_vencida` siguen sin suscriptor. No los conectamos porque hacerlo añadiría mensajes a la salida y eso es un cambio de comportamiento observable no autorizado.
+> Sobre los publishers: el Observer del TO-BE cubre los tres avisos que `Hacienda` emite y los cuatro publishers de cada `Potrero`, suscritos una sola vez al crearlo. `publisher_vacuna_vencida` sigue sin suscriptor porque no participa en una salida observable caracterizada.
 
 > Sobre `HistoriaClinica`: en el AS-IS (`03-src/redisenado/`) la clase no existe. Sí aparece, vacía y sin uso, en `05-reto2-patrones/04-src/baseline-input-2026-08-31/`, que es un snapshot intermedio y no el punto de partida de este reto.

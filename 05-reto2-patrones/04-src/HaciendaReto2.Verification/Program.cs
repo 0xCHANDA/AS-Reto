@@ -170,7 +170,7 @@ namespace HaciendaReto2.Verification
             hacienda.crear_potrero("X-T", l_tipos_potreros.ternero);
 
             AssertThrows(
-                "Error inesperado en el método anadir_res_potrero: La edad de la res no corresponde al tipo de potrero ternero.",
+                "Error inesperado en el método anadir_res_potrero: Error inesperado en el metodo anadir_res: La res no puede ser añadida al potrero X-T porque su edad no corresponde al tipo de potrero",
                 () => hacienda.anadir_res_potrero("X-T", "Intrusa", 30, 300),
                 "un potrero de terneros rechaza una res de 30 meses");
         }
@@ -642,7 +642,7 @@ namespace HaciendaReto2.Verification
             var res = potrero.buscar_res("Adaptada");
 
             AssertEqual(
-                "Venta de 'Adaptada' realizada con éxito.",
+                "Venta de la res Adaptada realizada con exito",
                 hacienda.vender(potrero, res, 1200),
                 "vender<T> liga la res con su inventario por tipo genérico");
             AssertEqual(0, potrero.L_reses.Count,

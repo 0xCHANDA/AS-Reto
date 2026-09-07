@@ -14,7 +14,7 @@ AS-IS: `03-src/redisenado/HaciendaNEW/`. TO-BE: `05-reto2-patrones/04-src/active
 | **Cómo se relaciona** | Los construye `p_mvcHacienda/Program.cs:74-78`; los consumidores sin contenedor usan `CatalogoCreadoresRes.PorDefecto()`. Los usan `Hacienda.anadir_res_potrero` (`Hacienda.cs:178`) y `PersistenciaService` (`:192`, `:602`, `:648`). La venta usa después el mismo dominio mediante `vender<T>`. |
 | **Impacto** | Creadas 5, modificadas 4 (`Hacienda`, `Potrero`, `PersistenciaService`, `Program`), eliminadas 0. Anexo B: SC-2 crea reses con chip por el mismo catálogo, sin tocar clientes. |
 | **Qué cuesta** | 5 clases más y un salto de indirección: quien lee `ParaEdad` no ve qué subtipo sale, tiene que abrir el creador. Depurar el alta de una res pasa de un switch a tres saltos. |
-| **Origen** | Idea propia. B-10 registra la corrección: el borrador traía Strategy y Chain of Responsibility, y los descartamos al ver el código. |
+| **Origen** | Idea propia, validada contra el código AS-IS y el verificador. |
 
 ---
 
@@ -25,10 +25,10 @@ AS-IS: `03-src/redisenado/HaciendaNEW/`. TO-BE: `05-reto2-patrones/04-src/active
 | **Patrón y punto de dolor que resuelve** | Builder, responde a P-04. `CrearLote` está escrito dos veces en `FabricadorVacunas.cs:60` y `:98`, idénticas salvo el `new` y el texto. La copia bacteriana arrastra un `$` faltante en `FabricadorVacunas.cs:86` que la viva no tiene: el resumen imprime literalmente `- Nombre: {nombre}`. |
 | **Alternativas que evaluaron** | **No hacer nada:** dejar las dos copias. Se descarta porque duplicar el cuerpo ya produjo un defecto real que nadie detectó. **Prototype:** descartada, resuelve el bucle del lote pero deja intactas las cuatro firmas del contrato y la selección de variante en `VacunaService`. **Template Method:** descartada, la secuencia de lote numera, omite duplicados y cuenta, y la individual no hace nada de eso; forzar una plantilla común deja pasos vacíos en una rama. |
 | **Qué sale y qué entra** | Sale: el cuerpo duplicado de los dos `CrearLote`. Entran: `IVacunaBuilder` (Builder), `BuilderBacteriana` y `BuilderViva` (ConcreteBuilder). `FabricadorVacunas` se transforma en Director y conserva la secuencia común en `FabricadorVacunas.cs:51` y `:71`. |
-| **Cómo se relaciona** | Los construye `FabricadorVacunas` en sus cuatro sobrecargas de compatibilidad (`:28`, `:34`, `:40`, `:46`). Los usa el propio Director. No interactúa con los otros tres patrones adoptados. |
+| **Cómo se relaciona** | Los construye `FabricadorVacunas` en sus cuatro sobrecargas de compatibilidad (`:28`, `:34`, `:40`, `:46`). Los usa el propio Director. No interactúa con los otros dos patrones adoptados. |
 | **Impacto** | Creadas 3, modificadas 1 (`FabricadorVacunas`), eliminadas 0. Anexo B: SC-3 registra vacunas en la historia clínica y un tipo nuevo de vacuna reutiliza el Director sin modificarlo. |
 | **Qué cuesta** | 3 clases más y un contrato nuevo que leer antes de tocar la creación de vacunas. `ICreacionVacuna` sigue publicando cuatro firmas: el patrón quitó el cuerpo duplicado, no el contrato. Queda declarado como deuda. |
-| **Origen** | Idea propia. B-09 registra la decisión de conservar el `$` faltante declarándolo en `IVacunaBuilder.NombreEnResumenDeLote` en vez de corregirlo. |
+| **Origen** | Idea propia, validada contra el mensaje observable AS-IS. |
 
 ---
 
@@ -38,11 +38,11 @@ AS-IS: `03-src/redisenado/HaciendaNEW/`. TO-BE: `05-reto2-patrones/04-src/active
 |---|---|
 | **Patrón y punto de dolor que resuelve** | Observer, responde a P-03. Hay siete suscripciones `+=` dentro de cuerpos de método que nunca se liberan: `Potrero.cs:112`, `:118`, `:124`, `:130` y `Hacienda.cs:225`, `:231`, `:294`. Con `Hacienda` registrada como singleton, la llamada número 200 a `alimentar_res` ejecuta 200 handlers. |
 | **Alternativas que evaluaron** | **No hacer nada:** dejar las suscripciones donde están. Se descarta porque la lista de suscriptores solo crece mientras viva el proceso, y para saber quién escucha un evento hay que leer el cuerpo de cada método. **Desuscribir al final de cada operación:** descartada, exige un `-=` por cada `+=` y un `try/finally`, y basta olvidar uno para volver al mismo punto. **Singleton como bus de eventos:** descartada, mete estado global en el dominio y ningún consumidor podría sustituirlo en una prueba. |
-| **Qué sale y qué entra** | Salen: las siete suscripciones dentro de métodos. Entran: `IObservadorMensaje` (Observer), `RecolectorMensajes` (ConcreteObserver) y `CapturaMensajes`, que delimita qué operación lee qué avisos. Las suscripciones bajan a tres, en el constructor de `Hacienda.cs:84-86`. |
-| **Cómo se relaciona** | Lo construye `Hacienda.cs:52` como campo. Lo usan los tres publishers de `Hacienda`, y cada operación abre su `Capturar()`. No interactúa con los otros tres patrones. Los cuatro publishers de `Potrero` y `publisher_vacuna_vencida` (`Hacienda.cs:46`) quedan sin observador: conectarlos añadiría mensajes a la salida y eso es un cambio observable no autorizado. |
+| **Qué sale y qué entra** | Salen: las siete suscripciones dentro de métodos. Entran: `IObservadorMensaje` (Observer), `RecolectorMensajes` (ConcreteObserver) y `CapturaMensajes`, que delimita qué operación lee qué avisos. `Hacienda` suscribe sus publishers en el constructor y suscribe cada `Potrero` una vez al crearlo. |
+| **Cómo se relaciona** | Lo construye `Hacienda.cs:52` como campo. Lo usan los publishers de `Hacienda` y los de cada `Potrero`; cada operación abre su `Capturar()`. No interactúa con los otros dos patrones. `publisher_vacuna_vencida` (`Hacienda.cs:46`) queda sin observador porque no participa en una salida observable. |
 | **Impacto** | Creadas 3, modificadas 2 (`Hacienda`, `Potrero`), eliminadas 0. Anexo B: SC-2 añade un aviso de geolocalización suscribiendo al recolector, sin tocar `Hacienda`. |
 | **Qué cuesta** | 3 clases más y un mecanismo de captura que hay que entender antes de tocar un publisher. Un aviso emitido fuera de una captura se descarta en silencio, lo que hace más difícil depurar por qué un mensaje no aparece. |
-| **Origen** | Idea propia, confirmada en B-10 al revisar la combinación del borrador. |
+| **Origen** | Idea propia, validada contra el código AS-IS y el verificador. |
 
 ---
 
