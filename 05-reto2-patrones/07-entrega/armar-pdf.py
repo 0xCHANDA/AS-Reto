@@ -6,12 +6,16 @@
 
 Requiere Google Chrome instalado. No instala nada.
 """
-import html, os, re, subprocess, sys
+import html, os, re, shutil, subprocess, sys, tempfile
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SALIDA_HTML = os.path.join(RAIZ, '07-entrega', 'documento.html')
 SALIDA_PDF  = os.path.join(RAIZ, '07-entrega', 'Reto2-Documento-Sustentacion.pdf')
-CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+SALIDA_DOCX = os.path.join(RAIZ, '07-entrega', 'Reto2_Hacienda_Documento_Sustentacion_Final.docx')
+CHROME = (os.environ.get('CHROME') or shutil.which('google-chrome') or
+          shutil.which('chromium') or shutil.which('chromium-browser') or
+          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+LIBREOFFICE = shutil.which('libreoffice') or shutil.which('soffice')
 
 # Orden del punto 5 del enunciado. Comenta una linea para dejarla fuera del PDF.
 SECCIONES = [
@@ -121,6 +125,20 @@ def main():
                     'file://' + SALIDA_HTML],
                    check=True, capture_output=True)
     print(f'\nPDF -> {SALIDA_PDF}')
+
+    if LIBREOFFICE:
+        with tempfile.TemporaryDirectory() as directorio_temporal:
+            html_docx = os.path.join(
+                directorio_temporal,
+                os.path.splitext(os.path.basename(SALIDA_DOCX))[0] + '.html')
+            open(html_docx, 'w', encoding='utf-8').write(doc)
+            subprocess.run([LIBREOFFICE, '--headless', '--convert-to',
+                            'docx:Office Open XML Text',
+                            '--outdir', directorio_temporal, html_docx],
+                           check=True, capture_output=True)
+            shutil.copyfile(
+                os.path.splitext(html_docx)[0] + '.docx', SALIDA_DOCX)
+        print(f'DOCX -> {SALIDA_DOCX}')
 
 if __name__ == '__main__':
     main()
